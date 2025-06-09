@@ -3,8 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple Sketchpad</title>
+    <title>Collaborative Sketchpad</title>
     <style>
+        :root {
+            --primary-color: #007bff;
+            --primary-hover-color: #0056b3;
+            --background-light: #f0f0f0;
+            --background-dark: #1a1a1a;
+            --controls-bg-light: white;
+            --controls-bg-dark: #2d2d2d;
+            --text-color-light: #333;
+            --text-color-dark: #eee;
+            --border-color-light: #ccc;
+            --border-color-dark: #4d4d4d;
+            --status-bg-success: #d4edda;
+            --status-text-success: #155724;
+            --status-bg-error: #f8d7da;
+            --status-text-error: #721c24;
+            --canvas-bg-light: white;
+            --canvas-bg-dark: #2d2d2d;
+        }
+
         * {
             margin: 0;
             padding: 0;
@@ -12,70 +31,116 @@
         }
         
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             display: flex;
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
-            background: #f0f0f0;
+            background: var(--background-light);
+            color: var(--text-color-light);
         }
 
         .controls {
             padding: 15px;
-            background: white;
+            background: var(--controls-bg-light);
             box-shadow: 0 2px 4px rgba(0,0,0,0.1);
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
             align-items: center;
+            justify-content: space-between; /* Distribute items */
             z-index: 1000;
         }
 
-        .tools {
+        .control-group {
             display: flex;
-            gap: 10px;
+            gap: 8px;
             align-items: center;
         }
 
-        input, button {
-            padding: 10px;
-            font-size: 16px;
-            border: 1px solid #ccc;
+        .control-group label {
+            font-size: 0.9em;
+            white-space: nowrap;
+        }
+
+        input[type="text"], input[type="number"], input[type="color"] {
+            padding: 8px;
+            font-size: 1em;
+            border: 1px solid var(--border-color-light);
             border-radius: 4px;
+            background: white;
+            color: var(--text-color-light);
+        }
+
+        input[type="color"] {
+            width: 40px;
+            height: 38px; /* Match button/input height */
+            padding: 2px;
+            cursor: pointer;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            width: 80px;
+            height: 8px;
+            background: var(--border-color-light);
+            border-radius: 5px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--primary-color);
+            cursor: pointer;
+            border: 2px solid white;
         }
 
         button {
-            background: #007bff;
+            padding: 10px 15px;
+            font-size: 1em;
+            background: var(--primary-color);
             color: white;
             border: none;
+            border-radius: 4px;
             cursor: pointer;
-            transition: background 0.3s;
-            min-width: 100px;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+            min-width: 80px; /* Smaller min-width for tools */
         }
 
         button:hover {
-            background: #0056b3;
+            background: var(--primary-hover-color);
         }
 
         button.active {
-            background: #0056b3;
+            background: var(--primary-hover-color);
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
 
         .status {
-            margin: 10px 0;
             padding: 10px;
-            background: #f8f9fa;
+            background: var(--status-bg-success);
+            color: var(--status-text-success);
             border-radius: 4px;
+            font-size: 0.85em;
             flex-grow: 1;
-            font-size: 14px;
+            text-align: center;
+            min-width: 150px;
+        }
+
+        .status.error {
+            background: var(--status-bg-error);
+            color: var(--status-text-error);
         }
 
         .canvas-container {
             flex-grow: 1;
             position: relative;
             overflow: hidden;
-            background: white;
+            background: var(--canvas-bg-light);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -87,135 +152,89 @@
             max-height: 100%;
             cursor: crosshair;
             touch-action: none;
-            background: white;
+            background: transparent; /* Canvas background handled by container */
         }
 
-        /* Media Queries for different devices */
-        
-        /* Large devices (desktops, 1200px and up) */
-        @media (min-width: 1200px) {
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
             .controls {
-                padding: 20px;
-            }
-            
-            input, button {
-                font-size: 18px;
-                padding: 12px;
-            }
-            
-            .status {
-                font-size: 16px;
-            }
-        }
-
-        /* Medium devices (tablets, 768px to 1199px) */
-        @media (min-width: 768px) and (max-width: 1199px) {
-            .controls {
-                padding: 15px;
-            }
-            
-            input, button {
-                font-size: 16px;
-                padding: 10px;
-            }
-        }
-
-        /* Small devices (landscape phones, 576px to 767px) */
-        @media (min-width: 576px) and (max-width: 767px) {
-            .controls {
-                padding: 12px;
-            }
-            
-            input, button {
-                font-size: 15px;
-                padding: 8px;
-            }
-            
-            .status {
-                font-size: 13px;
-            }
-        }
-
-        /* Extra small devices (portrait phones, up to 575px) */
-        @media (max-width: 575px) {
-            .controls {
-                padding: 10px;
                 flex-direction: column;
+                align-items: stretch;
+                padding: 10px;
             }
-            
+            .control-group {
+                flex-wrap: wrap;
+                justify-content: center;
+                margin-bottom: 5px;
+            }
+            input[type="text"], input[type="number"], button {
+                width: 100%;
+                margin-bottom: 5px;
+            }
             .tools {
-                width: 100%;
-                justify-content: space-between;
+                flex-wrap: wrap;
+                justify-content: center;
             }
-            
-            input, button {
-                width: 100%;
-                font-size: 14px;
-                padding: 8px;
-            }
-            
             .status {
-                width: 100%;
-                font-size: 12px;
-                margin: 5px 0;
+                margin-top: 10px;
             }
         }
 
-        /* For devices with touch screens */
-        @media (hover: none) {
-            button {
-                padding: 12px;
-            }
-            
-            input {
-                font-size: 16px;
-            }
-        }
-
-        /* For devices with high pixel density */
-        @media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
-            .controls {
-                box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-            }
-        }
-
-        /* For devices in dark mode */
+        /* Dark Mode */
         @media (prefers-color-scheme: dark) {
             body {
-                background: #1a1a1a;
+                background: var(--background-dark);
+                color: var(--text-color-dark);
             }
-            
             .controls {
-                background: #2d2d2d;
+                background: var(--controls-bg-dark);
                 box-shadow: 0 2px 4px rgba(0,0,0,0.2);
             }
-            
-            input {
+            input[type="text"], input[type="number"], input[type="color"] {
                 background: #3d3d3d;
-                color: #fff;
-                border-color: #4d4d4d;
+                color: var(--text-color-dark);
+                border-color: var(--border-color-dark);
             }
-            
+            input[type="range"]::-webkit-slider-thumb {
+                background: var(--primary-color);
+                border-color: var(--controls-bg-dark);
+            }
             .status {
                 background: #3d3d3d;
-                color: #fff;
+                color: var(--text-color-dark);
             }
-            
-            #canvas {
-                background: #2d2d2d;
+            .canvas-container {
+                background: var(--canvas-bg-dark);
             }
         }
     </style>
 </head>
 <body>
     <div class="controls">
-        <input type="text" id="username" placeholder="Your name">
-        <input type="text" id="roomId" placeholder="Room ID">
-        <button onclick="joinRoom()">Join Room</button>
-        <div class="tools">
+        <div class="control-group">
+            <input type="text" id="username" placeholder="Your name" value="Guest">
+            <input type="text" id="roomId" placeholder="Room ID" value="sketch_room">
+            <button onclick="joinRoom()" id="joinRoomBtn">Join Room</button>
+        </div>
+
+        <div class="control-group tools">
             <button onclick="toggleTool('pen')" id="penBtn" class="active">Pen</button>
             <button onclick="toggleTool('eraser')" id="eraserBtn">Eraser</button>
+            <button onclick="toggleTool('line')" id="lineBtn">Line</button>
+            <button onclick="toggleTool('rectangle')" id="rectangleBtn">Rect</button>
+            <button onclick="toggleTool('circle')" id="circleBtn">Circle</button>
+            <button onclick="toggleTool('text')" id="textBtn">Text</button>
         </div>
+
+        <div class="control-group">
+            <label for="colorPicker">Color:</label>
+            <input type="color" id="colorPicker" value="#000000">
+            <label for="lineWidthSlider">Size:</label>
+            <input type="range" id="lineWidthSlider" min="1" max="50" value="2">
+            <button onclick="undo()">Undo</button>
+            <button onclick="redo()">Redo</button>
+        </div>
+
         <div class="status" id="status">Not connected</div>
     </div>
     <div class="canvas-container">
@@ -228,36 +247,42 @@
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
         const statusDiv = document.getElementById('status');
+        const colorPicker = document.getElementById('colorPicker');
+        const lineWidthSlider = document.getElementById('lineWidthSlider');
+        const penBtn = document.getElementById('penBtn');
+        const eraserBtn = document.getElementById('eraserBtn');
+        const lineBtn = document.getElementById('lineBtn');
+        const rectangleBtn = document.getElementById('rectangleBtn');
+        const circleBtn = document.getElementById('circleBtn');
+        const textBtn = document.getElementById('textBtn');
+        const joinRoomBtn = document.getElementById('joinRoomBtn');
+
         let isDrawing = false;
-        let lastX = 0;
-        let lastY = 0;
+        let startPoint = { x: 0, y: 0 };
+        let lastPoint = { x: 0, y: 0 };
         let currentRoom = null;
         let currentTool = 'pen';
+        let currentColor = colorPicker.value;
+        let currentLineWidth = parseInt(lineWidthSlider.value);
+        let drawingHistory = [];
+        let historyIndex = -1; // -1 means no undo state available
 
-        // Function to clear the canvas
-        function clearCanvas() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // Reapply default styles after clearing
-            setDefaultCanvasStyles();
-        }
+        // --- Canvas Initialization and Resizing ---
 
-        // Function to set default canvas drawing styles
-        function setDefaultCanvasStyles() {
-            ctx.strokeStyle = '#000';
-            ctx.lineWidth = 2;
+        function setCanvasStyles() {
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            ctx.globalCompositeOperation = 'source-over'; // Default to normal drawing
+            ctx.font = '16px Arial'; // Default text font
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
         }
 
-        // Set canvas size and initial styles
         function resizeCanvas() {
             const container = canvas.parentElement;
             const containerWidth = container.clientWidth;
             const containerHeight = container.clientHeight;
             
-            // Calculate the size that maintains aspect ratio
-            const aspectRatio = 16/9; // You can adjust this ratio
+            const aspectRatio = 16/9; // Maintain 16:9 aspect ratio
             let width = containerWidth;
             let height = containerWidth / aspectRatio;
             
@@ -266,169 +291,403 @@
                 width = containerHeight * aspectRatio;
             }
             
-            canvas.width = width;
-            canvas.height = height;
-            
-            // Reapply current tool settings after resize to prevent visual glitches
+            canvas.width = width * window.devicePixelRatio;
+            canvas.height = height * window.devicePixelRatio;
+            canvas.style.width = `${width}px`;
+            canvas.style.height = `${height}px`;
+
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            setCanvasStyles(); // Reapply styles after scaling
+            redrawCanvas(); // Redraw content to fit new size
+        }
+
+        // --- Drawing History (Undo/Redo) ---
+
+        function addDrawingToHistory(drawingData) {
+            // If we undo and then draw something new, clear future history
+            if (historyIndex < drawingHistory.length - 1) {
+                drawingHistory = drawingHistory.slice(0, historyIndex + 1);
+            }
+            drawingHistory.push(drawingData);
+            historyIndex++;
+        }
+
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
+            drawingHistory.forEach(data => {
+                applyDrawing(data);
+            });
+            // Reapply current tool settings after redraw
             toggleTool(currentTool);
         }
 
-        // Initial resize and add resize listener
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
+        function undo() {
+            if (historyIndex > -1) {
+                historyIndex--;
+                redrawCanvas();
+                sendStatusMessage('Undo completed', 'info');
+            } else {
+                sendStatusMessage('Nothing to undo', 'warning');
+            }
+        }
 
-        // Tool functions
+        function redo() {
+            if (historyIndex < drawingHistory.length - 1) {
+                historyIndex++;
+                redrawCanvas();
+                sendStatusMessage('Redo completed', 'info');
+            } else {
+                sendStatusMessage('Nothing to redo', 'warning');
+            }
+        }
+
+        // --- Tool Management ---
+
         function toggleTool(tool) {
             currentTool = tool;
-            document.getElementById('penBtn').classList.toggle('active', tool === 'pen');
-            document.getElementById('eraserBtn').classList.toggle('active', tool === 'eraser');
-            
-            if (tool === 'eraser') {
-                ctx.globalCompositeOperation = 'destination-out'; // Erase by making pixels transparent
-                ctx.lineWidth = 20;
-            } else {
-                ctx.globalCompositeOperation = 'source-over'; // Normal drawing
-                ctx.strokeStyle = '#000000';
-                ctx.lineWidth = 2;
-            }
-            // Ensure default styles are set if the tool is 'pen'
-            if (tool === 'pen') {
-                setDefaultCanvasStyles();
+
+            // Deactivate all tool buttons
+            [penBtn, eraserBtn, lineBtn, rectangleBtn, circleBtn, textBtn].forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Activate the selected tool button
+            document.getElementById(`${tool}Btn`).classList.add('active');
+
+            // Reset drawing context for each tool
+            ctx.globalCompositeOperation = 'source-over'; // Default for most tools
+            ctx.strokeStyle = currentColor;
+            ctx.fillStyle = currentColor; // For text and filled shapes
+            ctx.lineWidth = currentLineWidth;
+
+            switch (tool) {
+                case 'eraser':
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.lineWidth = currentLineWidth * 2; // Eraser often wider
+                    break;
+                case 'text':
+                    // Prompt for text input when text tool is selected
+                    const text = prompt("Enter text:");
+                    if (text !== null && text.trim() !== "") {
+                        // Store the text to be drawn on click
+                        canvas.onclick = (e) => {
+                            const coords = getCoordinates(e);
+                            const textData = {
+                                x: coords.x,
+                                y: coords.y,
+                                text: text,
+                                font: ctx.font,
+                                fillStyle: ctx.fillStyle,
+                                tool: 'text'
+                            };
+                            applyDrawing(textData);
+                            addDrawingToHistory(textData);
+                            if (currentRoom) {
+                                socket.emit('draw', { roomId: currentRoom, data: textData });
+                            }
+                            canvas.onclick = null; // Remove handler after one use
+                        };
+                    } else {
+                        // If no text, revert to pen tool
+                        toggleTool('pen');
+                    }
+                    break;
+                // For other tools, default settings are fine
             }
         }
 
-        // Drawing functions
+        // --- Coordinate Handling ---
+
         function getCoordinates(e) {
             const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            
+            let clientX, clientY;
+
             if (e.touches) {
-                // For touch events, clientX/Y are relative to the viewport
-                return {
-                    x: (e.touches[0].clientX - rect.left) * scaleX,
-                    y: (e.touches[0].clientY - rect.top) * scaleY
-                };
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
             }
-            // For mouse events, offsetX/Y are relative to the target element (canvas)
+
+            // Adjust for canvas scaling (CSS vs Canvas resolution)
             return {
-                x: (e.offsetX) * scaleX,
-                y: (e.offsetY) * scaleY
+                x: (clientX - rect.left) / (rect.width / canvas.width),
+                y: (clientY - rect.top) / (rect.height / canvas.height)
             };
         }
+
+        // --- Drawing Logic ---
 
         function startDrawing(e) {
             e.preventDefault();
             isDrawing = true;
-            const coords = getCoordinates(e);
-            lastX = coords.x;
-            lastY = coords.y;
+            startPoint = getCoordinates(e);
+            lastPoint = { ...startPoint }; // Initialize lastPoint for pen/eraser
+            
+            // For shapes, start drawing a temporary preview
+            if (['line', 'rectangle', 'circle'].includes(currentTool)) {
+                // No need to draw immediately, just capture startPoint
+            } else if (currentTool === 'text') {
+                // Text tool handles its own click
+                isDrawing = false; // Prevent drag drawing for text
+                return;
+            }
+
+            // Draw initial point for pen/eraser
+            applyDrawing({
+                x1: lastPoint.x,
+                y1: lastPoint.y,
+                x2: lastPoint.x,
+                y2: lastPoint.y,
+                tool: currentTool,
+                color: currentColor,
+                lineWidth: currentLineWidth
+            });
         }
 
         function draw(e) {
             e.preventDefault();
             if (!isDrawing) return;
-            const coords = getCoordinates(e);
-            
-            ctx.beginPath();
-            ctx.moveTo(lastX, lastY);
-            ctx.lineTo(coords.x, coords.y);
-            ctx.stroke();
-            
-            if (currentRoom) {
-                socket.emit('draw', {
-                    roomId: currentRoom,
-                    data: {
-                        x1: lastX,
-                        y1: lastY,
-                        x2: coords.x,
-                        y2: coords.y,
-                        tool: currentTool
-                    }
-                });
+            const currentCoords = getCoordinates(e);
+
+            // Clear temporary shape if drawing a shape
+            if (['line', 'rectangle', 'circle'].includes(currentTool)) {
+                redrawCanvas(); // Clear and redraw history
+                applyTemporaryShape(startPoint, currentCoords, currentTool, currentColor, currentLineWidth);
+            } else {
+                // For pen/eraser
+                const drawingData = {
+                    x1: lastPoint.x,
+                    y1: lastPoint.y,
+                    x2: currentCoords.x,
+                    y2: currentCoords.y,
+                    tool: currentTool,
+                    color: currentColor,
+                    lineWidth: currentLineWidth
+                };
+                applyDrawing(drawingData);
+                addDrawingToHistory(drawingData); // Add to history during drawing for fluidity
+
+                if (currentRoom) {
+                    socket.emit('draw', { roomId: currentRoom, data: drawingData });
+                }
             }
-            
-            lastX = coords.x;
-            lastY = coords.y;
+            lastPoint = currentCoords;
         }
 
         function stopDrawing(e) {
             e.preventDefault();
+            if (!isDrawing) return;
             isDrawing = false;
+            const endPoint = getCoordinates(e);
+
+            if (['line', 'rectangle', 'circle'].includes(currentTool)) {
+                const finalDrawingData = {
+                    x1: startPoint.x,
+                    y1: startPoint.y,
+                    x2: endPoint.x,
+                    y2: endPoint.y,
+                    tool: currentTool,
+                    color: currentColor,
+                    lineWidth: currentLineWidth
+                };
+                addDrawingToHistory(finalDrawingData);
+                redrawCanvas(); // Redraw all including the final shape
+                if (currentRoom) {
+                    socket.emit('draw', { roomId: currentRoom, data: finalDrawingData });
+                }
+            }
+            // For pen/eraser, points are added in draw function
+            // For text, handled by onclick
+        }
+        
+        function applyDrawing(data) {
+            const originalCompositeOperation = ctx.globalCompositeOperation;
+            const originalLineWidth = ctx.lineWidth;
+            const originalStrokeStyle = ctx.strokeStyle;
+            const originalFillStyle = ctx.fillStyle;
+
+            // Apply tool-specific settings
+            if (data.tool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+                ctx.lineWidth = data.lineWidth * 2;
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = data.color;
+                ctx.fillStyle = data.color;
+                ctx.lineWidth = data.lineWidth;
+            }
+
+            // Draw based on tool type
+            switch (data.tool) {
+                case 'pen':
+                case 'eraser':
+                    ctx.beginPath();
+                    ctx.moveTo(data.x1, data.y1);
+                    ctx.lineTo(data.x2, data.y2);
+                    ctx.stroke();
+                    break;
+                case 'line':
+                    ctx.beginPath();
+                    ctx.moveTo(data.x1, data.y1);
+                    ctx.lineTo(data.x2, data.y2);
+                    ctx.stroke();
+                    break;
+                case 'rectangle':
+                    const rectX = Math.min(data.x1, data.x2);
+                    const rectY = Math.min(data.y1, data.y2);
+                    const rectWidth = Math.abs(data.x1 - data.x2);
+                    const rectHeight = Math.abs(data.y1 - data.y2);
+                    ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
+                    break;
+                case 'circle':
+                    const centerX = (data.x1 + data.x2) / 2;
+                    const centerY = (data.y1 + data.y2) / 2;
+                    const radius = Math.sqrt(Math.pow(data.x2 - data.x1, 2) + Math.pow(data.y2 - data.y1, 2)) / 2;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    break;
+                case 'text':
+                    ctx.font = data.font;
+                    ctx.fillStyle = data.fillStyle;
+                    ctx.fillText(data.text, data.x, data.y);
+                    break;
+            }
+
+            // Restore original context settings
+            ctx.globalCompositeOperation = originalCompositeOperation;
+            ctx.lineWidth = originalLineWidth;
+            ctx.strokeStyle = originalStrokeStyle;
+            ctx.fillStyle = originalFillStyle;
         }
 
-        // Event listeners
+        // For shapes, we need to draw a temporary preview without adding to history
+        function applyTemporaryShape(start, end, tool, color, lineWidth) {
+            const originalCompositeOperation = ctx.globalCompositeOperation;
+            const originalLineWidth = ctx.lineWidth;
+            const originalStrokeStyle = ctx.strokeStyle;
+            const originalFillStyle = ctx.fillStyle;
+
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.strokeStyle = color;
+            ctx.fillStyle = color;
+            ctx.lineWidth = lineWidth;
+
+            switch (tool) {
+                case 'line':
+                    ctx.beginPath();
+                    ctx.moveTo(start.x, start.y);
+                    ctx.lineTo(end.x, end.y);
+                    ctx.stroke();
+                    break;
+                case 'rectangle':
+                    const rectX = Math.min(start.x, end.x);
+                    const rectY = Math.min(start.y, end.y);
+                    const rectWidth = Math.abs(start.x - end.x);
+                    const rectHeight = Math.abs(start.y - end.y);
+                    ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
+                    break;
+                case 'circle':
+                    const centerX = (start.x + end.x) / 2;
+                    const centerY = (start.y + end.y) / 2;
+                    const radius = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2)) / 2;
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    break;
+            }
+            ctx.globalCompositeOperation = originalCompositeOperation;
+            ctx.lineWidth = originalLineWidth;
+            ctx.strokeStyle = originalStrokeStyle;
+            ctx.fillStyle = originalFillStyle;
+        }
+
+        // --- Event Listeners ---
+
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing); // Important to stop drawing if mouse leaves canvas
 
-        // Touch events
-        canvas.addEventListener('touchstart', startDrawing);
-        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
         canvas.addEventListener('touchend', stopDrawing);
 
-        // Socket events
+        colorPicker.addEventListener('change', (e) => {
+            currentColor = e.target.value;
+            toggleTool(currentTool); // Reapply tool settings with new color
+        });
+
+        lineWidthSlider.addEventListener('input', (e) => {
+            currentLineWidth = parseInt(e.target.value);
+            toggleTool(currentTool); // Reapply tool settings with new width
+        });
+
+        // --- Socket Events ---
+
         socket.on('connect', () => {
-            statusDiv.textContent = 'Connected to server';
-            statusDiv.style.background = '#d4edda';
+            sendStatusMessage('Connected to server', 'success');
+            joinRoomBtn.disabled = false;
         });
 
         socket.on('connect_error', (error) => {
             console.error('Socket connection error:', error);
-            statusDiv.textContent = `Connection error: ${error.message}`;
-            statusDiv.style.background = '#f8d7da';
+            sendStatusMessage(`Connection error: ${error.message}`, 'error');
+            joinRoomBtn.disabled = true;
         });
 
         socket.on('disconnect', () => {
-            statusDiv.textContent = 'Disconnected from server';
-            statusDiv.style.background = '#f8d7da';
+            sendStatusMessage('Disconnected from server', 'error');
+            joinRoomBtn.disabled = false;
         });
 
         socket.on('draw', (data) => {
-            const originalCompositeOperation = ctx.globalCompositeOperation;
-            const originalLineWidth = ctx.lineWidth;
-            const originalStrokeStyle = ctx.strokeStyle;
-            
-            if (data.tool === 'eraser') {
-                ctx.globalCompositeOperation = 'destination-out';
-                ctx.lineWidth = 20;
-            } else {
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.strokeStyle = '#000000';
-                ctx.lineWidth = 2;
-            }
-            
-            ctx.beginPath();
-            ctx.moveTo(data.x1, data.y1);
-            ctx.lineTo(data.x2, data.y2);
-            ctx.stroke();
-            
-            // Restore original context settings after drawing
-            ctx.globalCompositeOperation = originalCompositeOperation;
-            ctx.lineWidth = originalLineWidth;
-            ctx.strokeStyle = originalStrokeStyle;
+            applyDrawing(data);
+            addDrawingToHistory(data); // Add received drawing to local history
         });
 
         socket.on('userJoined', ({ id, username }) => {
-            statusDiv.textContent = `${username} joined the room`;
-            statusDiv.style.background = '#d4edda';
-            clearCanvas(); // Clear canvas for new user joining a room
+            sendStatusMessage(`${username} joined the room`, 'info');
+            // When a new user joins, if this is the first user in the room,
+            // they effectively clear the canvas. Otherwise, we assume the
+            // new user needs the current state.
+            // For now, clear canvas for new user joining a room.
+            clearCanvas(); 
+            // In a real app, you'd send the existing history to the new user.
         });
 
-        // Room functions
+        // --- Room Management ---
+
         function joinRoom() {
-            const username = document.getElementById('username').value;
-            const roomId = document.getElementById('roomId').value;
+            const username = document.getElementById('username').value.trim();
+            const roomId = document.getElementById('roomId').value.trim();
             if (username && roomId) {
                 currentRoom = roomId;
                 socket.emit('joinRoom', { roomId, username });
-                statusDiv.textContent = `Joined room: ${roomId}`;
-                statusDiv.style.background = '#d4edda';
+                sendStatusMessage(`Joined room: ${roomId} as ${username}`, 'success');
+                clearCanvas(); // Clear canvas for new session
+                drawingHistory = []; // Reset history for new room
+                historyIndex = -1;
+            } else {
+                sendStatusMessage('Please enter a username and room ID.', 'warning');
             }
         }
-        // Initialize default canvas styles when the script loads
-        setDefaultCanvasStyles();
+
+        // --- Utility Functions ---
+
+        function sendStatusMessage(message, type = 'info') {
+            statusDiv.textContent = message;
+            statusDiv.className = `status ${type}`; // Apply class for styling
+        }
+
+        // --- Initial Setup ---
+
+        resizeCanvas(); // Set initial canvas size
+        toggleTool(currentTool); // Set initial tool
+        // No explicit setDefaultCanvasStyles here, as toggleTool handles it.
     </script>
 </body>
+</html> 
 </html> 
