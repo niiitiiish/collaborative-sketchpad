@@ -2,98 +2,27 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
-const fs = require('fs');
 const cors = require('cors');
-const { networkInterfaces } = require('os');
-const { execSync } = require('child_process');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, {
   cors: {
-    origin: process.env.CORS_ORIGIN || "*",
+    origin: "*",
     methods: ["GET", "POST"]
   }
 });
 
-// Enable CORS for all routes
-app.use(cors({
-  origin: process.env.CORS_ORIGIN || "*",
-  methods: ["GET", "POST"]
-}));
+// Enable CORS
+app.use(cors());
 
 // Serve static files from the React app
-const buildPath = path.join(__dirname, 'client/build');
-console.log('Build path:', buildPath);
-console.log('Environment:', process.env.NODE_ENV);
-console.log('Current directory:', __dirname);
-console.log('Directory contents:', fs.readdirSync(__dirname));
+app.use(express.static(path.join(__dirname, 'client/build')));
 
-// Check if build directory exists
-if (fs.existsSync(buildPath)) {
-  console.log('Build directory exists at:', buildPath);
-  console.log('Build directory contents:', fs.readdirSync(buildPath));
-  // Serve static files from the React app
-  app.use(express.static(buildPath));
-  
-  // Handle React routing, return all requests to React app
-  app.get('*', (req, res) => {
-    const indexPath = path.join(buildPath, 'index.html');
-    if (fs.existsSync(indexPath)) {
-      res.sendFile(indexPath);
-    } else {
-      console.error('index.html not found at:', indexPath);
-      res.status(404).send('index.html not found');
-    }
-  });
-} else {
-  console.error('Build directory not found at:', buildPath);
-  console.log('Current directory structure:');
-  console.log('Root:', fs.readdirSync(__dirname));
-  
-  // Check client directory
-  const clientPath = path.join(__dirname, 'client');
-  if (fs.existsSync(clientPath)) {
-    console.log('Client directory:', fs.readdirSync(clientPath));
-    
-    // Check if build exists in client directory
-    const clientBuildPath = path.join(clientPath, 'build');
-    if (fs.existsSync(clientBuildPath)) {
-      console.log('Found build in client directory');
-      // Serve static files from the client build directory
-      app.use(express.static(clientBuildPath));
-      app.get('*', (req, res) => {
-        res.sendFile(path.join(clientBuildPath, 'index.html'));
-      });
-    } else {
-      console.log('No build directory found in client');
-      // In production, serve a 404 page
-      if (process.env.NODE_ENV === 'production') {
-        app.get('*', (req, res) => {
-          res.status(404).send('Application not built correctly. Please check the build process.');
-        });
-      } else {
-        // In development, redirect to the React dev server
-        app.get('*', (req, res) => {
-          res.redirect('http://localhost:3000');
-        });
-      }
-    }
-  } else {
-    console.log('No client directory found');
-    // In production, serve a 404 page
-    if (process.env.NODE_ENV === 'production') {
-      app.get('*', (req, res) => {
-        res.status(404).send('Application not built correctly. Please check the build process.');
-      });
-    } else {
-      // In development, redirect to the React dev server
-      app.get('*', (req, res) => {
-        res.redirect('http://localhost:3000');
-      });
-    }
-  }
-}
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+});
 
 // Store active rooms and their permissions
 const rooms = new Map();
@@ -172,21 +101,4 @@ const HOST = process.env.HOST || '0.0.0.0';
 
 server.listen(PORT, HOST, () => {
   console.log(`Server running at http://${HOST}:${PORT}`);
-  console.log('Environment:', process.env.NODE_ENV);
-  console.log('Build path:', buildPath);
-  console.log('Build exists:', fs.existsSync(buildPath));
-});
-
-// Function to get local IP address
-function getLocalIP() {
-  const nets = networkInterfaces();
-  for (const name of Object.keys(nets)) {
-    for (const net of nets[name]) {
-      // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
-      if (net.family === 'IPv4' && !net.internal) {
-        return net.address;
-      }
-    }
-  }
-  return 'localhost';
-} 
+}); 

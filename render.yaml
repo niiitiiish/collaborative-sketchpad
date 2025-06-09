@@ -3,60 +3,16 @@ services:
     name: collaborative-sketchpad
     env: node
     buildCommand: |
-      echo "Starting build process..."
-      pwd
-      ls -la
-      
-      echo "Installing root dependencies..."
       npm install
-      
-      echo "Building client..."
       cd client
-      rm -rf node_modules
-      rm -f package-lock.json
       npm install
-      echo "Running build command..."
-      CI=false GENERATE_SOURCEMAP=false npm run build
-      
-      echo "Verifying build..."
-      if [ -d "build" ]; then
-        echo "Build directory exists"
-        ls -la build/
-      else
-        echo "Error: Build directory not created!"
-        exit 1
-      fi
-      
-      echo "Moving build to correct location..."
-      cd ..
-      rm -rf client/build
-      mkdir -p client/build
-      cp -r client/build/* client/build/
-      
-      echo "Final verification..."
-      if [ -d "client/build" ]; then
-        echo "Final build directory exists"
-        ls -la client/build/
-      else
-        echo "Error: Final build directory not created!"
-        exit 1
-      fi
-      
-      echo "Build complete"
-    startCommand: NODE_ENV=production node server.js
+      npm run build
+    startCommand: node server.js
     envVars:
-      - key: NODE_ENV
-        value: production
       - key: PORT
         value: 10000
-      - key: GENERATE_SOURCEMAP
-        value: false
-      - key: CORS_ORIGIN
-        value: "*"
       - key: HOST
         value: "0.0.0.0"
-      - key: CI
-        value: "false"
     healthCheckPath: /
     autoDeploy: true
     plan: free

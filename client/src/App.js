@@ -3,10 +3,8 @@ import { io } from 'socket.io-client';
 import { Box, TextField, Button, Typography, Paper, List, ListItem, ListItemText, Snackbar, Alert } from '@mui/material';
 import SketchPad from './components/SketchPad';
 
-// Connect to the appropriate server URL based on environment
-const SOCKET_URL = process.env.NODE_ENV === 'production'
-  ? 'https://sketch-collab.onrender.com'  // Use the exact production URL
-  : `http://${window.location.hostname}:5000`;  // In development, use local server
+// Connect to the current server URL
+const SOCKET_URL = window.location.origin;
 
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Current URL:', window.location.origin);
@@ -16,10 +14,7 @@ const socket = io(SOCKET_URL, {
   transports: ['websocket', 'polling'],
   reconnection: true,
   reconnectionAttempts: 5,
-  reconnectionDelay: 1000,
-  path: '/socket.io/',
-  secure: true,
-  rejectUnauthorized: false
+  reconnectionDelay: 1000
 });
 
 // Add connection status logging
