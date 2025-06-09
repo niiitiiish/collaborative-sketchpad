@@ -6,8 +6,9 @@ import SketchPad from './components/SketchPad';
 // Connect to the appropriate server URL based on environment
 const SOCKET_URL = process.env.NODE_ENV === 'production'
   ? window.location.origin  // Automatically use the current domain
-  : 'http://localhost:5000';
+  : `http://${window.location.hostname}:5000`;  // Use the same hostname as the client
 
+console.log('Connecting to socket server at:', SOCKET_URL);
 const socket = io(SOCKET_URL);
 
 function App() {
