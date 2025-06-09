@@ -22,16 +22,28 @@ function App() {
 
   useEffect(() => {
     socket.on('hostStatus', (status) => {
+      console.log('Host status received:', status);
       setIsHost(status);
       setHasPermission(status);
+      setNotification({
+        open: true,
+        message: status ? 'You are the host' : 'You are not the host',
+        severity: 'info'
+      });
     });
 
     socket.on('userJoined', ({ users, permissions }) => {
+      console.log('Users joined:', users);
+      console.log('Permissions:', permissions);
       setUsers(users);
-      setHasPermission(permissions.some(([id, hasPermission]) => id === socket.id && hasPermission));
+      const userPermission = permissions.find(([id]) => id === socket.id);
+      const hasPermission = userPermission ? userPermission[1] : false;
+      console.log('Setting permission to:', hasPermission);
+      setHasPermission(hasPermission);
     });
 
     socket.on('permissionRequest', ({ userId, username }) => {
+      console.log('Permission request from:', username);
       setPermissionRequests((prev) => [...prev, { userId, username }]);
       setNotification({
         open: true,
@@ -41,6 +53,7 @@ function App() {
     });
 
     socket.on('permissionUpdate', ({ userId, granted }) => {
+      console.log('Permission update:', userId, granted);
       if (userId === socket.id) {
         setHasPermission(granted);
         setNotification({
@@ -61,11 +74,13 @@ function App() {
 
   const handleJoinRoom = () => {
     if (!username || !roomId) return;
+    console.log('Joining room:', roomId, 'as', username);
     socket.emit('joinRoom', { roomId, username });
     setIsJoined(true);
   };
 
   const handleGrantPermission = (userId) => {
+    console.log('Granting permission to:', userId);
     socket.emit('grantPermission', { roomId, userId });
     setPermissionRequests((prev) => prev.filter((req) => req.userId !== userId));
   };

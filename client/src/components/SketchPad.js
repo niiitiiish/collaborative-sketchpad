@@ -11,6 +11,7 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
     if (!socket) return;
 
     socket.on('draw', (data) => {
+      console.log('Received draw data:', data);
       setLines((prevLines) => [...prevLines, data]);
     });
 
@@ -20,32 +21,49 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
   }, [socket]);
 
   const handleMouseDown = (e) => {
-    if (!hasPermission) return;
+    console.log('Mouse down - Permission:', hasPermission, 'Is Host:', isHost);
+    if (!hasPermission) {
+      console.log('No permission to draw');
+      return;
+    }
     setIsDrawing(true);
     const pos = e.target.getStage().getPointerPosition();
-    setLines([...lines, { points: [pos.x, pos.y] }]);
+    const newLine = { points: [pos.x, pos.y] };
+    setLines((prevLines) => [...prevLines, newLine]);
   };
 
   const handleMouseMove = (e) => {
-    if (!isDrawing || !hasPermission) return;
+    if (!isDrawing || !hasPermission) {
+      console.log('Cannot draw - Drawing:', isDrawing, 'Permission:', hasPermission);
+      return;
+    }
     const stage = e.target.getStage();
     const point = stage.getPointerPosition();
     const lastLine = lines[lines.length - 1];
-    lastLine.points = lastLine.points.concat([point.x, point.y]);
-    setLines([...lines.slice(0, -1), lastLine]);
+    
+    // Create a new line object to ensure state update
+    const updatedLine = {
+      ...lastLine,
+      points: [...lastLine.points, point.x, point.y]
+    };
+    
+    setLines((prevLines) => [...prevLines.slice(0, -1), updatedLine]);
 
     // Emit drawing data to other users
+    console.log('Emitting draw data:', updatedLine);
     socket.emit('draw', {
       roomId,
-      data: lastLine
+      data: updatedLine
     });
   };
 
   const handleMouseUp = () => {
+    console.log('Mouse up - Stopping drawing');
     setIsDrawing(false);
   };
 
   const handleRequestPermission = () => {
+    console.log('Requesting permission to draw');
     socket.emit('requestPermission', { roomId });
   };
 
@@ -66,8 +84,8 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
           width={window.innerWidth - 40}
           height={window.innerHeight - 200}
           onMouseDown={handleMouseDown}
-          onMousemove={handleMouseMove}
-          onMouseup={handleMouseUp}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
           ref={stageRef}
         >
           <Layer>
