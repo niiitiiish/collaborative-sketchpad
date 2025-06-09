@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { io } from 'socket.io-client';
 import { Box, TextField, Button, Typography, Paper, List, ListItem, ListItemText, Snackbar, Alert } from '@mui/material';
 import SketchPad from './components/SketchPad';
+import AdComponent from './components/AdComponent';
 
 // Connect to the current server URL
 const SOCKET_URL = window.location.origin;
@@ -151,7 +152,7 @@ function App() {
 
   return (
     <Box sx={{ height: '100vh', display: 'flex' }}>
-      <Box sx={{ width: 250, p: 2, borderRight: '1px solid #ccc' }}>
+      <Box sx={{ width: 250, p: 2, borderRight: '1px solid #ccc', display: 'flex', flexDirection: 'column' }}>
         <Typography variant="h6" gutterBottom>
           Users in Room
         </Typography>
@@ -184,14 +185,30 @@ function App() {
             ))}
           </Box>
         )}
+        <Box sx={{ mt: 'auto', mb: 2 }}>
+          <AdComponent 
+            adSlot="YOUR_AD_SLOT_ID_1" 
+            adFormat="vertical"
+            adStyle={{ marginTop: '20px' }}
+          />
+        </Box>
       </Box>
-      <Box sx={{ flex: 1 }}>
-        <SketchPad
-          socket={socket}
-          roomId={roomId}
-          hasPermission={hasPermission}
-          isHost={isHost}
-        />
+      <Box sx={{ flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ p: 2, borderBottom: '1px solid #ccc' }}>
+          <AdComponent 
+            adSlot="YOUR_AD_SLOT_ID_2"
+            adFormat="horizontal"
+            adStyle={{ maxHeight: '90px' }}
+          />
+        </Box>
+        <Box sx={{ flex: 1 }}>
+          <SketchPad
+            socket={socket}
+            roomId={roomId}
+            hasPermission={hasPermission}
+            isHost={isHost}
+          />
+        </Box>
       </Box>
       <Snackbar
         open={notification.open}
