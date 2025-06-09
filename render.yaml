@@ -14,7 +14,7 @@ services:
       cd client
       npm install
       echo "Running build command..."
-      npm run build
+      CI=false npm run build
       
       echo "Verifying build..."
       if [ -d "build" ]; then
@@ -53,6 +53,8 @@ services:
         value: "*"
       - key: HOST
         value: "0.0.0.0"
+      - key: CI
+        value: "false"
     healthCheckPath: /
     autoDeploy: true
     plan: free

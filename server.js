@@ -68,6 +68,13 @@ if (fs.existsSync(buildPath)) {
       });
     } else {
       console.log('No build directory found in client');
+      // Try to create build directory
+      try {
+        fs.mkdirSync(clientBuildPath, { recursive: true });
+        console.log('Created build directory');
+      } catch (error) {
+        console.error('Error creating build directory:', error);
+      }
       // In production, serve a 404 page
       if (process.env.NODE_ENV === 'production') {
         app.get('*', (req, res) => {
