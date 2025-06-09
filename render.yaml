@@ -2,7 +2,9 @@ services:
   - type: web
     name: simple-sketchpad
     env: node
-    buildCommand: npm install
+    buildCommand: |
+      npm install
+      ls -la
     startCommand: node server.js
     envVars:
       - key: PORT
