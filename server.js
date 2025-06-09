@@ -48,10 +48,17 @@ if (fs.existsSync(buildPath)) {
   });
 } else {
   console.error('Build directory not found at:', buildPath);
-  // In development, redirect to the React dev server
-  app.get('*', (req, res) => {
-    res.redirect('http://localhost:3000');
-  });
+  // In production, serve a 404 page
+  if (process.env.NODE_ENV === 'production') {
+    app.get('*', (req, res) => {
+      res.status(404).send('Application not built correctly. Please check the build process.');
+    });
+  } else {
+    // In development, redirect to the React dev server
+    app.get('*', (req, res) => {
+      res.redirect('http://localhost:3000');
+    });
+  }
 }
 
 // Store active rooms and their permissions
@@ -171,7 +178,7 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-const HOST = '0.0.0.0';
+const HOST = process.env.HOST || '0.0.0.0';
 
 server.listen(PORT, HOST, () => {
   console.log(`Server running at http://${HOST}:${PORT}`);

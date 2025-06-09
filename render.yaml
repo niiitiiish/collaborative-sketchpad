@@ -17,7 +17,7 @@ services:
       cp -r client/build/* client/build/
       echo "Verifying final build..."
       ls -la client/build/
-    startCommand: node server.js
+    startCommand: NODE_ENV=production node server.js
     envVars:
       - key: NODE_ENV
         value: production
