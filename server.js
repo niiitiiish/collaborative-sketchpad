@@ -71,6 +71,13 @@ if (fs.existsSync(buildPath)) {
       });
     } else {
       console.log('No build directory found in client');
+      console.log('Attempting to create build directory...');
+      try {
+        fs.mkdirSync(clientBuildPath, { recursive: true });
+        console.log('Created build directory');
+      } catch (error) {
+        console.error('Error creating build directory:', error);
+      }
       // In development, redirect to the React dev server
       app.get('*', (req, res) => {
         res.redirect('http://localhost:3000');
