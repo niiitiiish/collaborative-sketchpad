@@ -28,69 +28,14 @@ const buildPath = path.join(__dirname, 'client/build');
 console.log('Build path:', buildPath);
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Current directory:', __dirname);
-console.log('Directory contents:', fs.readdirSync(__dirname));
 
-// Check if build directory exists
-if (fs.existsSync(buildPath)) {
-  console.log('Build directory exists at:', buildPath);
-  console.log('Build directory contents:', fs.readdirSync(buildPath));
-  // Serve static files from the React app
-  app.use(express.static(buildPath));
-  
-  // Handle React routing, return all requests to React app
-  app.get('*', (req, res) => {
-    const indexPath = path.join(buildPath, 'index.html');
-    console.log('Attempting to serve:', indexPath);
-    
-    if (fs.existsSync(indexPath)) {
-      console.log('index.html exists, sending file');
-      res.sendFile(indexPath);
-    } else {
-      console.error('index.html not found at:', indexPath);
-      res.status(404).send('index.html not found');
-    }
-  });
-} else {
-  console.error('Build directory not found at:', buildPath);
-  console.log('Current directory structure:');
-  console.log('Root:', fs.readdirSync(__dirname));
-  
-  // Check client directory
-  const clientPath = path.join(__dirname, 'client');
-  if (fs.existsSync(clientPath)) {
-    console.log('Client directory:', fs.readdirSync(clientPath));
-    
-    // Check if build exists in client directory
-    const clientBuildPath = path.join(clientPath, 'build');
-    if (fs.existsSync(clientBuildPath)) {
-      console.log('Found build in client directory');
-      // Serve static files from the client build directory
-      app.use(express.static(clientBuildPath));
-      app.get('*', (req, res) => {
-        res.sendFile(path.join(clientBuildPath, 'index.html'));
-      });
-    } else {
-      console.log('No build directory found in client');
-      console.log('Attempting to create build directory...');
-      try {
-        fs.mkdirSync(clientBuildPath, { recursive: true });
-        console.log('Created build directory');
-      } catch (error) {
-        console.error('Error creating build directory:', error);
-      }
-      // In development, redirect to the React dev server
-      app.get('*', (req, res) => {
-        res.redirect('http://localhost:3000');
-      });
-    }
-  } else {
-    console.log('No client directory found');
-    // In development, redirect to the React dev server
-    app.get('*', (req, res) => {
-      res.redirect('http://localhost:3000');
-    });
-  }
-}
+// Serve static files from the React app
+app.use(express.static(buildPath));
+
+// Handle React routing, return all requests to React app
+app.get('*', (req, res) => {
+  res.sendFile(path.join(buildPath, 'index.html'));
+});
 
 // Store active rooms and their permissions
 const rooms = new Map();
