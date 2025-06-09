@@ -31,6 +31,12 @@
             z-index: 1000;
         }
 
+        .tools {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
         input, button {
             padding: 10px;
             font-size: 16px;
@@ -51,6 +57,11 @@
             background: #0056b3;
         }
 
+        button.active {
+            background: #0056b3;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
         .status {
             margin: 10px 0;
             padding: 10px;
@@ -65,16 +76,18 @@
             position: relative;
             overflow: hidden;
             background: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         #canvas {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            max-width: 100%;
+            max-height: 100%;
             cursor: crosshair;
             touch-action: none;
+            background: white;
         }
 
         /* Media Queries for different devices */
@@ -130,6 +143,11 @@
                 flex-direction: column;
             }
             
+            .tools {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
             input, button {
                 width: 100%;
                 font-size: 14px;
@@ -146,11 +164,11 @@
         /* For devices with touch screens */
         @media (hover: none) {
             button {
-                padding: 12px; /* Larger touch target */
+                padding: 12px;
             }
             
             input {
-                font-size: 16px; /* Prevent zoom on focus */
+                font-size: 16px;
             }
         }
 
@@ -194,6 +212,10 @@
         <input type="text" id="username" placeholder="Your name">
         <input type="text" id="roomId" placeholder="Room ID">
         <button onclick="joinRoom()">Join Room</button>
+        <div class="tools">
+            <button onclick="toggleTool('pen')" id="penBtn" class="active">Pen</button>
+            <button onclick="toggleTool('eraser')" id="eraserBtn">Eraser</button>
+        </div>
         <div class="status" id="status">Not connected</div>
     </div>
     <div class="canvas-container">
@@ -210,12 +232,26 @@
         let lastX = 0;
         let lastY = 0;
         let currentRoom = null;
+        let currentTool = 'pen';
 
         // Set canvas size
         function resizeCanvas() {
             const container = canvas.parentElement;
-            canvas.width = container.clientWidth;
-            canvas.height = container.clientHeight;
+            const containerWidth = container.clientWidth;
+            const containerHeight = container.clientHeight;
+            
+            // Calculate the size that maintains aspect ratio
+            const aspectRatio = 16/9; // You can adjust this ratio
+            let width = containerWidth;
+            let height = containerWidth / aspectRatio;
+            
+            if (height > containerHeight) {
+                height = containerHeight;
+                width = containerHeight * aspectRatio;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
             
             // Set line style
             ctx.strokeStyle = '#000';
@@ -227,6 +263,21 @@
         // Initial resize and add resize listener
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
+
+        // Tool functions
+        function toggleTool(tool) {
+            currentTool = tool;
+            document.getElementById('penBtn').classList.toggle('active', tool === 'pen');
+            document.getElementById('eraserBtn').classList.toggle('active', tool === 'eraser');
+            
+            if (tool === 'eraser') {
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 20;
+            } else {
+                ctx.strokeStyle = '#000000';
+                ctx.lineWidth = 2;
+            }
+        }
 
         // Drawing functions
         function getCoordinates(e) {
@@ -271,7 +322,8 @@
                         x1: lastX,
                         y1: lastY,
                         x2: coords.x,
-                        y2: coords.y
+                        y2: coords.y,
+                        tool: currentTool
                     }
                 });
             }
@@ -308,10 +360,21 @@
         });
 
         socket.on('draw', (data) => {
+            const originalStyle = ctx.strokeStyle;
+            const originalWidth = ctx.lineWidth;
+            
+            if (data.tool === 'eraser') {
+                ctx.strokeStyle = '#ffffff';
+                ctx.lineWidth = 20;
+            }
+            
             ctx.beginPath();
             ctx.moveTo(data.x1, data.y1);
             ctx.lineTo(data.x2, data.y2);
             ctx.stroke();
+            
+            ctx.strokeStyle = originalStyle;
+            ctx.lineWidth = originalWidth;
         });
 
         socket.on('userJoined', ({ id, username }) => {
