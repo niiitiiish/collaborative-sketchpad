@@ -22,10 +22,18 @@ app.use(express.json());
 
 // Serve static files from the React app in production
 if (process.env.NODE_ENV === 'production') {
+  // Serve static files from the React app
   app.use(express.static(path.join(__dirname, 'client/build')));
   
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+  // Handle React routing, return all requests to React app
+  app.get('*', (req, res, next) => {
+    const indexPath = path.join(__dirname, 'client/build', 'index.html');
+    res.sendFile(indexPath, (err) => {
+      if (err) {
+        console.error('Error sending index.html:', err);
+        next(err);
+      }
+    });
   });
 }
 

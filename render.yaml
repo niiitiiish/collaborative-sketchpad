@@ -2,7 +2,13 @@ services:
   - type: web
     name: collaborative-sketchpad
     env: node
-    buildCommand: npm install && cd client && npm install && npm run build
+    rootDir: .
+    buildCommand: |
+      npm install
+      cd client
+      npm install
+      npm run build
+      cd ..
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
