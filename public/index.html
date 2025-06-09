@@ -8,30 +8,26 @@
     <style>
         /* CSS Variables for Theming */
         :root {
-            --primary-color: #3b82f6; /* Blue-500 */
-            --primary-hover-color: #2563eb; /* Blue-600 */
-            --secondary-color: #6366f1; /* Indigo-500 */
+            --primary-color: #00bcd4; /* Cyan 500 - vibrant blue */
+            --primary-hover-color: #00acc1; /* Cyan 600 */
+            --secondary-color: #673ab7; /* Deep Purple 500 - vibrant purple */
+            --accent-color: #8bc34a; /* Light Green 500 - vibrant green */
             --background-light: #f8fafc; /* Slate-50 */
-            --background-dark: #1e293b; /* Slate-800 */
-            --controls-bg-light: #ffffff; /* White */
-            --controls-bg-dark: #334155; /* Slate-700 */
-            --text-color-light: #1f2937; /* Gray-900 */
-            --text-color-dark: #e2e8f0; /* Slate-200 */
-            --border-color-light: #e2e8f0; /* Slate-200 */
-            --border-color-dark: #475569; /* Slate-600 */
-            --status-bg-success: #dcfce7; /* Green-100 */
-            --status-text-success: #16a34a; /* Green-600 */
-            --status-bg-error: #fee2e2; /* Red-100 */
-            --status-text-error: #dc2626; /* Red-600 */
-            --status-bg-info: #e0f2fe; /* Blue-100 */
-            --status-text-info: #2563eb; /* Blue-600 */
-            --canvas-bg-light: #ffffff;
-            --canvas-bg-dark: #3d4f64; /* Custom dark canvas background */
-            --shadow-light: 0 4px 6px rgba(0, 0, 0, 0.1);
-            --shadow-dark: 0 4px 6px rgba(0, 0, 0, 0.2);
+            --background-dark: #1a202c; /* Darker background for contrast */
+            --surface-light: #ffffff; /* White for controls, cards */
+            --surface-dark: #2d3748; /* Darker surface for controls, cards */
+            --text-color-light: #2d3748; /* Dark text */
+            --text-color-dark: #edf2f7; /* Light text */
+            --border-color-light: #e2e8f0; /* Light border */
+            --border-color-dark: #4a5568; /* Dark border */
+            --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.1);
+            --shadow-dark: 0 5px 15px rgba(0, 0, 0, 0.3);
+            --glass-blur: 10px;
+            --glass-bg-light: rgba(255, 255, 255, 0.15);
+            --glass-bg-dark: rgba(0, 0, 0, 0.25);
         }
 
-        /* Basic Resets & Global Styles */
+        /* Global Styles & Resets */
         * {
             margin: 0;
             padding: 0;
@@ -44,23 +40,30 @@
             flex-direction: column;
             height: 100vh;
             overflow: hidden;
-            background: var(--background-light);
+            background: linear-gradient(135deg, var(--background-light) 0%, #e0f2f7 100%); /* Subtle gradient */
             color: var(--text-color-light);
-            transition: background 0.3s ease, color 0.3s ease;
+            transition: background 0.5s ease, color 0.3s ease;
         }
 
-        /* Controls Area */
-        .controls {
-            padding: 15px 20px;
-            background: var(--controls-bg-light);
+        /* Header/Top Toolbar */
+        .header {
+            padding: 15px 25px;
+            background: var(--surface-light);
             box-shadow: var(--shadow-light);
             display: flex;
             flex-wrap: wrap;
-            gap: 15px;
+            gap: 20px;
             align-items: center;
             justify-content: space-between;
             z-index: 1000;
             transition: background 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .header-title {
+            font-size: 1.8em;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
         }
 
         .control-group {
@@ -71,41 +74,41 @@
         }
 
         .control-group label {
-            font-size: 0.9em;
+            font-size: 0.95em;
             color: var(--text-color-light);
             white-space: nowrap;
         }
 
         /* Inputs */
-        input[type="text"], input[type="number"], input[type="color"], select {
-            padding: 8px 12px;
+        input[type="text"], input[type="number"], input[type="color"], select, textarea {
+            padding: 10px 15px;
             font-size: 1em;
             border: 1px solid var(--border-color-light);
-            border-radius: 6px;
-            background: var(--controls-bg-light);
+            border-radius: 8px;
+            background: var(--surface-light);
             color: var(--text-color-light);
-            transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease;
+            transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease, box-shadow 0.2s ease;
             outline: none;
         }
 
-        input[type="text"]:focus, input[type="number"]:focus, select:focus {
+        input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
             border-color: var(--primary-color);
-            box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.25);
         }
 
         input[type="color"] {
-            width: 40px;
-            height: 38px; /* Match button/input height */
-            padding: 2px;
+            width: 45px;
+            height: 45px;
+            padding: 3px;
             cursor: pointer;
-            border-radius: 6px;
+            border-radius: 8px;
         }
 
         /* Range Slider */
         input[type="range"] {
             -webkit-appearance: none;
-            width: 90px;
-            height: 8px;
+            width: 100px;
+            height: 10px;
             background: var(--border-color-light);
             border-radius: 5px;
             outline: none;
@@ -115,62 +118,70 @@
 
         input[type="range"]::-webkit-slider-thumb {
             -webkit-appearance: none;
-            width: 18px;
-            height: 18px;
+            width: 22px;
+            height: 22px;
             border-radius: 50%;
             background: var(--primary-color);
             cursor: grab;
-            border: 2px solid white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            transition: background 0.3s ease, box-shadow 0.3s ease;
+            border: 3px solid var(--surface-light);
+            box-shadow: var(--shadow-light);
+            transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.1s ease, border-color 0.3s ease;
         }
         input[type="range"]::-webkit-slider-thumb:active {
             cursor: grabbing;
-            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.25);
+            transform: scale(1.1);
+            box-shadow: 0 0 0 5px rgba(0, 188, 212, 0.35);
         }
 
         /* Buttons */
         button {
-            padding: 10px 18px;
+            padding: 10px 20px;
             font-size: 1em;
             background: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
-            transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.1s ease;
-            min-width: 70px;
+            transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
+            min-width: 80px;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 5px;
+            gap: 8px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         button:hover {
             background: var(--primary-hover-color);
-            transform: translateY(-1px);
+            transform: translateY(-2px);
+            box-shadow: 0 7px 15px rgba(0, 0, 0, 0.2);
         }
 
         button:active {
             transform: translateY(0);
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
         }
 
         button.active {
-            background: var(--primary-hover-color);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+            background: var(--secondary-color);
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
+            transform: translateY(0);
         }
 
         /* Status Message */
         .status {
-            padding: 10px 15px;
-            background: var(--status-bg-info);
-            color: var(--status-text-info);
-            border-radius: 6px;
-            font-size: 0.85em;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9em;
             flex-grow: 1;
             text-align: center;
-            min-width: 180px;
+            min-width: 200px;
+            font-weight: 500;
             transition: background 0.3s ease, color 0.3s ease;
+            background: var(--status-bg-info);
+            color: var(--status-text-info);
         }
 
         .status.success {
@@ -186,6 +197,88 @@
             color: #856404; /* Yellow-800 */
         }
 
+        /* Main Content Layout */
+        .main-content {
+            display: flex;
+            flex-grow: 1;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styles (Left - Tools) */
+        .sidebar.left {
+            width: 250px;
+            background: var(--surface-light);
+            padding: 20px;
+            box-shadow: var(--shadow-light);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+            border-right: 1px solid var(--border-color-light);
+        }
+
+        .sidebar-section h3 {
+            color: var(--primary-color);
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 2px solid var(--border-color-light);
+            padding-bottom: 8px;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .tool-grid button {
+            min-width: unset;
+            width: 100%;
+        }
+
+        /* Right Sidebar (Chat & Users) */
+        .sidebar.right {
+            width: 300px;
+            background: var(--surface-light);
+            padding: 20px;
+            box-shadow: var(--shadow-light);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            transition: background 0.3s ease, box-shadow 0.3s ease;
+            border-left: 1px solid var(--border-color-light);
+        }
+
+        .user-list ul,
+        .chat-messages ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .user-list li,
+        .chat-messages li {
+            padding: 8px 0;
+            border-bottom: 1px dashed var(--border-color-light);
+            font-size: 0.9em;
+            color: var(--text-color-light);
+        }
+
+        .chat-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .chat-input-group input {
+            flex-grow: 1;
+        }
+
         /* Canvas Area */
         .canvas-container {
             flex-grow: 1;
@@ -195,7 +288,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            transition: background 0.3s ease;
+            transition: background 0.5s ease;
         }
 
         #canvas {
@@ -203,41 +296,70 @@
             cursor: crosshair;
             touch-action: none;
             background: transparent; /* Canvas background handled by container */
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 8px;
         }
 
         /* On-Canvas Text Input */
         #textInput {
             position: absolute;
-            border: 1px dashed var(--primary-color);
-            padding: 5px;
+            border: 2px dashed var(--secondary-color);
+            padding: 8px;
             font-family: inherit;
             font-size: 16px; /* Default, will be overridden by JS */
-            line-height: 1.2;
+            line-height: 1.3;
             resize: none;
             overflow: hidden;
-            background: rgba(255, 255, 255, 0.9);
+            background: rgba(255, 255, 255, 0.95); /* Slightly less transparent */
             color: var(--text-color-light);
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            box-shadow: var(--shadow-light);
             z-index: 10;
-            display: none; /* Hidden by default */
+            display: none;
+            border-radius: 6px;
         }
-        /* Dark mode for text input */
-        @media (prefers-color-scheme: dark) {
-            #textInput {
-                background: rgba(51, 65, 85, 0.9); /* controls-bg-dark with transparency */
-                color: var(--text-color-dark);
-                border: 1px dashed var(--secondary-color);
+
+        /* Glassmorphism Effect */
+        .glass-panel {
+            background: var(--glass-bg-light);
+            backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 1024px) {
+            .sidebar.left,
+            .sidebar.right {
+                width: 200px;
+                padding: 15px;
+            }
+            .header {
+                gap: 10px;
+            }
+            .header-title {
+                font-size: 1.5em;
             }
         }
 
-
-        /* Responsive Adjustments (Mobile First) */
         @media (max-width: 768px) {
-            .controls {
+            .header {
                 flex-direction: column;
                 align-items: stretch;
                 padding: 10px;
                 gap: 10px;
+            }
+            .main-content {
+                flex-direction: column;
+            }
+            .sidebar.left,
+            .sidebar.right {
+                width: 100%;
+                height: auto; /* Allow height to adjust */
+                border-right: none;
+                border-left: none;
+                border-bottom: 1px solid var(--border-color-light);
+                box-shadow: none;
             }
             .control-group {
                 flex-wrap: wrap;
@@ -248,77 +370,166 @@
                 width: 100%;
             }
             input[type="range"] {
-                width: 100px; /* Keep slider a bit smaller for mobile */
+                width: 100%;
             }
             .status {
                 margin-top: 5px;
-                min-width: unset; /* Remove min-width for mobile */
+                min-width: unset;
+            }
+            .tool-grid {
+                grid-template-columns: repeat(3, 1fr); /* More columns for small screens */
             }
         }
 
         /* Dark Mode */
         @media (prefers-color-scheme: dark) {
             body {
-                background: var(--background-dark);
+                background: linear-gradient(135deg, var(--background-dark) 0%, #2a3b4c 100%);
                 color: var(--text-color-dark);
             }
-            .controls {
-                background: var(--controls-bg-dark);
+            .header {
+                background: var(--surface-dark);
                 box-shadow: var(--shadow-dark);
+            }
+            .header-title {
+                color: var(--primary-color);
             }
             .control-group label {
                 color: var(--text-color-dark);
             }
-            input[type="text"], input[type="number"], input[type="color"], select {
-                background: #3d4f64; /* Slate-700 darker */
+            input[type="text"], input[type="number"], input[type="color"], select, textarea {
+                background: #3f516d; /* Darker input background */
                 color: var(--text-color-dark);
                 border-color: var(--border-color-dark);
             }
             input[type="range"]::-webkit-slider-thumb {
-                background: var(--primary-color);
-                border-color: var(--controls-bg-dark);
+                border-color: var(--surface-dark);
+            }
+            button.active {
+                background: var(--secondary-color);
+                box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
             }
             .status {
-                background: #3d4f64;
+                background: #3f516d;
                 color: var(--text-color-dark);
             }
             .canvas-container {
                 background: var(--canvas-bg-dark);
             }
+            #canvas {
+                box-shadow: 0 0 20px rgba(0,0,0,0.3);
+            }
+            .sidebar.left,
+            .sidebar.right {
+                background: var(--surface-dark);
+                box-shadow: var(--shadow-dark);
+                border-color: var(--border-color-dark);
+            }
+            .sidebar-section h3 {
+                border-color: var(--border-color-dark);
+            }
+            .user-list li,
+            .chat-messages li {
+                border-color: var(--border-color-dark);
+            }
+            .glass-panel {
+                background: var(--glass-bg-dark);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                box-shadow: var(--shadow-dark);
+            }
         }
     </style>
 </head>
 <body>
-    <div class="controls">
+    <div class="header">
+        <div class="header-title">Super Sketchpad</div>
+        
         <div class="control-group">
             <input type="text" id="username" placeholder="Your name" value="Guest">
             <input type="text" id="roomId" placeholder="Room ID" value="sketch_room">
             <button onclick="joinRoom()" id="joinRoomBtn">Join Room</button>
         </div>
 
-        <div class="control-group tools">
-            <button onclick="toggleTool('pen')" id="penBtn" class="active" title="Pen Tool">Pen</button>
-            <button onclick="toggleTool('eraser')" id="eraserBtn" title="Eraser Tool">Eraser</button>
-            <button onclick="toggleTool('line')" id="lineBtn" title="Line Tool">Line</button>
-            <button onclick="toggleTool('rectangle')" id="rectangleBtn" title="Rectangle Tool">Rect</button>
-            <button onclick="toggleTool('circle')" id="circleBtn" title="Circle Tool">Circle</button>
-            <button onclick="toggleTool('text')" id="textBtn" title="Text Tool">Text</button>
-        </div>
-
         <div class="control-group">
-            <label for="colorPicker">Color:</label>
-            <input type="color" id="colorPicker" value="#000000" title="Select Color">
-            <label for="lineWidthSlider">Size:</label>
-            <input type="range" id="lineWidthSlider" min="1" max="50" value="2" title="Adjust Brush/Eraser Size">
-            <button onclick="undo()" title="Undo Last Action">Undo</button>
-            <button onclick="redo()" title="Redo Last Action">Redo</button>
+            <div class="status" id="status">Not connected</div>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="sidebar left">
+            <div class="sidebar-section tools-section">
+                <h3>Tools</h3>
+                <div class="tool-grid">
+                    <button onclick="toggleTool('pen')" id="penBtn" class="active" title="Pen Tool">Pen</button>
+                    <button onclick="toggleTool('eraser')" id="eraserBtn" title="Eraser Tool">Eraser</button>
+                    <button onclick="toggleTool('line')" id="lineBtn" title="Line Tool">Line</button>
+                    <button onclick="toggleTool('rectangle')" id="rectangleBtn" title="Rectangle Tool">Rect</button>
+                    <button onclick="toggleTool('circle')" id="circleBtn" title="Circle Tool">Circle</button>
+                    <button onclick="toggleTool('text')" id="textBtn" title="Text Tool">Text</button>
+                </div>
+            </div>
+
+            <div class="sidebar-section properties-section">
+                <h3>Properties</h3>
+                <div class="control-group">
+                    <label for="colorPicker">Color:</label>
+                    <input type="color" id="colorPicker" value="#000000" title="Select Color">
+                </div>
+                <div class="control-group">
+                    <label for="lineWidthSlider">Size:</label>
+                    <input type="range" id="lineWidthSlider" min="1" max="50" value="2" title="Adjust Brush/Eraser Size">
+                </div>
+            </div>
+            
+            <div class="sidebar-section history-section">
+                <h3>History</h3>
+                <div class="control-group">
+                    <button onclick="undo()" title="Undo Last Action">Undo</button>
+                    <button onclick="redo()" title="Redo Last Action">Redo</button>
+                </div>
+            </div>
+
+            <!-- Optional Layers Panel (UI Only for now) -->
+            <div class="sidebar-section layers-section">
+                <h3>Layers (UI)</h3>
+                <ul id="layersList">
+                    <li>Layer 1 (Active)</li>
+                    <li>Layer 2</li>
+                </ul>
+                <div class="control-group">
+                    <button>+ Add Layer</button>
+                    <button>- Del Layer</button>
+                </div>
+            </div>
+
         </div>
 
-        <div class="status" id="status">Not connected</div>
-    </div>
-    <div class="canvas-container">
-        <canvas id="canvas"></canvas>
-        <textarea id="textInput" style="display: none;"></textarea>
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+            <textarea id="textInput" style="display: none;"></textarea>
+        </div>
+
+        <div class="sidebar right">
+            <div class="sidebar-section user-section">
+                <h3>Users</h3>
+                <ul id="usersList">
+                    <li><span style="color: var(--primary-color);">•</span> Guest (You)</li>
+                </ul>
+            </div>
+
+            <div class="sidebar-section chat-section">
+                <h3>Chat</h3>
+                <div class="chat-messages" id="chatMessages">
+                    <ul>
+                        <li>Welcome to the Sketchpad!</li>
+                    </ul>
+                </div>
+                <div class="chat-input-group">
+                    <input type="text" id="chatInput" placeholder="Type a message...">
+                    <button onclick="sendMessage()">Send</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
@@ -338,25 +549,27 @@
         const textBtn = document.getElementById('textBtn');
         const joinRoomBtn = document.getElementById('joinRoomBtn');
         const textInput = document.getElementById('textInput');
+        const chatInput = document.getElementById('chatInput');
+        const chatMessages = document.getElementById('chatMessages');
+        const usersList = document.getElementById('usersList');
 
         // --- Drawing State Variables ---
         let isDrawing = false;
         let startPoint = { x: 0, y: 0 };
-        let lastPoint = { x: 0, y: 0 }; // Used for continuous drawing (pen/eraser)
+        let lastPoint = { x: 0, y: 0 }; 
         let currentRoom = null;
         let currentTool = 'pen';
         let currentColor = colorPicker.value;
         let currentLineWidth = parseInt(lineWidthSlider.value);
         let drawingHistory = [];
-        let historyIndex = -1; // -1 means no undo state available, 0 is the first state
-        let currentStroke = null; // To group pen/eraser strokes into one undoable action
+        let historyIndex = -1; 
+        let currentStroke = null; // To group pen/eraser strokes
 
         // --- Canvas Initialization and Resizing ---
-
         function setCanvasStyles() {
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
-            ctx.font = '16px Inter, sans-serif'; // Default text font
+            ctx.font = '16px Inter, sans-serif'; 
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
         }
@@ -375,24 +588,19 @@
                 width = containerHeight * aspectRatio;
             }
             
-            // Set canvas drawing buffer size for high DPI screens
             canvas.width = width * window.devicePixelRatio;
             canvas.height = height * window.devicePixelRatio;
-            // Set canvas display size (CSS pixels)
             canvas.style.width = `${width}px`;
             canvas.style.height = `${height}px`;
 
-            // Scale the context to match the high DPI buffer
             ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-            
-            setCanvasStyles(); // Reapply styles after scaling
-            redrawCanvas(); // Redraw all content to fit new size and scale
+            setCanvasStyles(); 
+            redrawCanvas(); 
         }
 
         // --- Drawing History (Undo/Redo) ---
 
         function addDrawingToHistory(drawingData) {
-            // If we undo and then draw something new, clear future history
             if (historyIndex < drawingHistory.length - 1) {
                 drawingHistory = drawingHistory.slice(0, historyIndex + 1);
             }
@@ -402,14 +610,12 @@
         }
 
         function redrawCanvas() {
-            // Clear the canvas using display dimensions (CSS pixels)
             ctx.clearRect(0, 0, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
             
             drawingHistory.forEach(data => {
                 applyDrawing(data);
             });
-            // Reapply current tool settings after redraw to ensure correct cursor/drawing state
-            toggleTool(currentTool, false); // false to not toggle button active state needlessly
+            toggleTool(currentTool, false); 
         }
 
         function undo() {
@@ -417,7 +623,6 @@
                 historyIndex--;
                 redrawCanvas();
                 sendStatusMessage('Undo completed', 'info');
-                // console.log('Undo. New history index:', historyIndex);
             } else {
                 sendStatusMessage('Nothing to undo', 'warning');
             }
@@ -428,7 +633,6 @@
                 historyIndex++;
                 redrawCanvas();
                 sendStatusMessage('Redo completed', 'info');
-                // console.log('Redo. New history index:', historyIndex);
             } else {
                 sendStatusMessage('Nothing to redo', 'warning');
             }
@@ -438,14 +642,12 @@
 
         function toggleTool(tool, updateButtonState = true) {
             currentTool = tool;
-            hideTextInput(); // Hide text input if switching tool
+            hideTextInput(); 
 
             if (updateButtonState) {
-                // Deactivate all tool buttons
                 [penBtn, eraserBtn, lineBtn, rectangleBtn, circleBtn, textBtn].forEach(btn => {
                     btn.classList.remove('active');
                 });
-                // Activate the selected tool button
                 const selectedBtn = document.getElementById(`${tool}Btn`);
                 if (selectedBtn) {
                     selectedBtn.classList.add('active');
@@ -453,21 +655,20 @@
             }
 
             // Reset drawing context for each tool
-            ctx.globalCompositeOperation = 'source-over'; // Default for most tools
+            ctx.globalCompositeOperation = 'source-over'; 
             ctx.strokeStyle = currentColor;
-            ctx.fillStyle = currentColor; // For text and filled shapes
+            ctx.fillStyle = currentColor; 
             ctx.lineWidth = currentLineWidth;
 
             // Apply tool-specific settings
             switch (tool) {
                 case 'eraser':
-                    ctx.globalCompositeOperation = 'destination-out'; // Erase by making pixels transparent
-                    ctx.lineWidth = currentLineWidth * 2; // Eraser often wider
+                    ctx.globalCompositeOperation = 'destination-out';
+                    ctx.lineWidth = currentLineWidth * 2; 
                     break;
                 case 'text':
                     // Text tool specific logic for input handling (handled in mousedown)
                     break;
-                // For other tools, default settings are fine
             }
         }
 
@@ -484,8 +685,6 @@
                 clientX = e.clientX;
                 clientY = e.clientY;
             }
-
-            // Adjust for canvas scaling (CSS pixels to canvas drawing buffer pixels)
             return {
                 x: (clientX - rect.left) * (canvas.width / rect.width),
                 y: (clientY - rect.top) * (canvas.height / rect.height)
@@ -496,20 +695,18 @@
 
         function startDrawing(e) {
             e.preventDefault();
-            hideTextInput(); // Hide text input if starting any new drawing action
+            hideTextInput(); 
 
             startPoint = getCoordinates(e);
-            lastPoint = { ...startPoint }; // Initialize lastPoint for continuous drawing
+            lastPoint = { ...startPoint }; 
 
             if (currentTool === 'text') {
-                // For text tool, click defines position for input
                 showTextInput(startPoint.x, startPoint.y);
-                isDrawing = false; // Prevent drag drawing for text tool
+                isDrawing = false; 
                 return;
             }
 
             isDrawing = true;
-            // For pen/eraser, create the start of a stroke
             if (currentTool === 'pen' || currentTool === 'eraser') {
                 currentStroke = {
                     tool: currentTool,
@@ -519,7 +716,6 @@
                 };
                 applyDrawing(currentStroke); // Draw the first point
             }
-            // For shapes, we just capture startPoint
         }
 
         function draw(e) {
@@ -528,21 +724,18 @@
             const currentCoords = getCoordinates(e);
 
             if (currentTool === 'pen' || currentTool === 'eraser') {
-                // Add points to the current stroke
                 currentStroke.points.push({ x: currentCoords.x, y: currentCoords.y });
-                // Draw the segment locally
+                
                 ctx.beginPath();
                 ctx.moveTo(lastPoint.x, lastPoint.y);
                 ctx.lineTo(currentCoords.x, currentCoords.y);
-                // Apply current tool settings directly for live drawing
                 ctx.globalCompositeOperation = (currentTool === 'eraser' ? 'destination-out' : 'source-over');
-                ctx.strokeStyle = (currentTool === 'eraser' ? '#ffffff' : currentColor); // Eraser draws white
+                ctx.strokeStyle = (currentTool === 'eraser' ? canvas.style.background : currentColor); 
                 ctx.lineWidth = (currentTool === 'eraser' ? currentLineWidth * 2 : currentLineWidth);
                 ctx.stroke();
-                // Restore original global settings after temporary draw to not affect others
-                toggleTool(currentTool, false); // Reapply current tool settings (no button update)
+
+                toggleTool(currentTool, false); 
             } else if (['line', 'rectangle', 'circle'].includes(currentTool)) {
-                // For shapes, clear and redraw the whole history + temporary shape
                 redrawCanvas(); 
                 applyTemporaryShape(startPoint, currentCoords, currentTool, currentColor, currentLineWidth);
             }
@@ -556,14 +749,12 @@
             const endPoint = getCoordinates(e);
 
             if (currentTool === 'pen' || currentTool === 'eraser') {
-                // Finalize the current stroke and add to history
                 addDrawingToHistory(currentStroke);
                 if (currentRoom) {
                     socket.emit('draw', { roomId: currentRoom, data: currentStroke });
                 }
-                currentStroke = null; // Reset for next stroke
+                currentStroke = null; 
             } else if (['line', 'rectangle', 'circle'].includes(currentTool)) {
-                // Finalize the shape and add to history
                 const finalDrawingData = {
                     x1: startPoint.x,
                     y1: startPoint.y,
@@ -574,17 +765,15 @@
                     lineWidth: currentLineWidth
                 };
                 addDrawingToHistory(finalDrawingData);
-                redrawCanvas(); // Redraw all including the final shape
+                redrawCanvas(); 
                 if (currentRoom) {
                     socket.emit('draw', { roomId: currentRoom, data: finalDrawingData });
                 }
             }
-            // Text tool handles its own finalization
         }
         
         // --- Drawing Application (for history and received data) ---
         function applyDrawing(data) {
-            // Save original context settings
             const originalCompositeOperation = ctx.globalCompositeOperation;
             const originalLineWidth = ctx.lineWidth;
             const originalStrokeStyle = ctx.strokeStyle;
@@ -613,7 +802,7 @@
                             ctx.lineTo(data.points[i].x, data.points[i].y);
                         }
                         ctx.stroke();
-                    } else if (data.x1 !== undefined) { // Handle older single point data if necessary
+                    } else if (data.x1 !== undefined) { 
                         ctx.beginPath();
                         ctx.moveTo(data.x1, data.y1);
                         ctx.lineTo(data.x2, data.y2);
@@ -642,8 +831,8 @@
                     ctx.stroke();
                     break;
                 case 'text':
-                    ctx.font = data.font || '16px Inter, sans-serif'; // Use saved font or default
-                    ctx.fillStyle = data.fillStyle || '#000000'; // Use saved color or default
+                    ctx.font = data.font || '16px Inter, sans-serif'; 
+                    ctx.fillStyle = data.fillStyle || '#000000'; 
                     ctx.fillText(data.text, data.x, data.y);
                     break;
             }
@@ -701,32 +890,31 @@
         // --- Text Input Management ---
         function showTextInput(x, y) {
             textInput.style.display = 'block';
-            // Position the textarea relative to the canvas
+            // Position the textarea relative to the canvas display size
             const canvasRect = canvas.getBoundingClientRect();
-            const containerRect = canvas.parentElement.getBoundingClientRect();
 
-            // Calculate position relative to the container for CSS 'position: absolute'
-            textInput.style.left = `${(x / (canvas.width / canvasRect.width))}px`;
-            textInput.style.top = `${(y / (canvas.height / canvasRect.height))}px`;
+            // Scale back from canvas drawing coordinates (x,y) to CSS display coordinates for textarea positioning
+            const displayX = x / (canvas.width / canvasRect.width);
+            const displayY = y / (canvas.height / canvasRect.height);
+            
+            textInput.style.left = `${displayX}px`;
+            textInput.style.top = `${displayY}px`;
 
-            // Set font and color for the textarea
             textInput.style.font = ctx.font;
             textInput.style.color = currentColor;
-            textInput.style.width = 'auto'; // Auto-adjust width
-            textInput.style.height = 'auto'; // Auto-adjust height
+            textInput.style.width = 'auto'; 
+            textInput.style.height = 'auto'; 
             textInput.value = '';
             textInput.focus();
 
-            // Handle input commit
             textInput.onblur = commitText;
             textInput.onkeydown = (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) { // Commit on Enter, allow Shift+Enter for new line
+                if (e.key === 'Enter' && !e.shiftKey) { 
                     e.preventDefault();
                     commitText();
                 }
             };
 
-            // Adjust textarea size as text is typed
             textInput.oninput = () => {
                 textInput.style.height = 'auto';
                 textInput.style.height = textInput.scrollHeight + 'px';
@@ -746,15 +934,15 @@
             const text = textInput.value.trim();
             if (text) {
                 // Convert textarea's CSS position (relative to canvas display size) back to canvas drawing coordinates
-                const canvasX = parseFloat(textInput.style.left) * (canvas.width / canvas.style.width.replace('px',''));
-                const canvasY = parseFloat(textInput.style.top) * (canvas.height / canvas.style.height.replace('px',''));
+                const canvasX = parseFloat(textInput.style.left) * (canvas.width / parseFloat(canvas.style.width));
+                const canvasY = parseFloat(textInput.style.top) * (canvas.height / parseFloat(canvas.style.height));
 
                 const textData = {
                     x: canvasX,
                     y: canvasY,
                     text: text,
-                    font: ctx.font, // Current canvas font
-                    fillStyle: currentColor, // Current color
+                    font: ctx.font, 
+                    fillStyle: currentColor, 
                     tool: 'text'
                 };
                 applyDrawing(textData);
@@ -764,29 +952,27 @@
                 }
             }
             hideTextInput();
-            toggleTool('pen'); // Revert to pen tool after text entry
+            toggleTool('pen'); 
         }
 
-
-        // --- Event Listeners ---
+        // --- Event Listeners (Canvas, Tools, Sliders) ---
         canvas.addEventListener('mousedown', startDrawing);
         canvas.addEventListener('mousemove', draw);
         canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing); // Important to stop drawing if mouse leaves canvas
+        canvas.addEventListener('mouseout', stopDrawing); 
 
-        // Passive false for touch events to allow e.preventDefault()
         canvas.addEventListener('touchstart', startDrawing, { passive: false });
         canvas.addEventListener('touchmove', draw, { passive: false });
         canvas.addEventListener('touchend', stopDrawing);
 
         colorPicker.addEventListener('change', (e) => {
             currentColor = e.target.value;
-            toggleTool(currentTool, false); // Reapply tool settings with new color, no button update
+            toggleTool(currentTool, false); 
         });
 
         lineWidthSlider.addEventListener('input', (e) => {
             currentLineWidth = parseInt(e.target.value);
-            toggleTool(currentTool, false); // Reapply tool settings with new width, no button update
+            toggleTool(currentTool, false); 
         });
 
         // --- Socket Events ---
@@ -808,15 +994,26 @@
 
         socket.on('draw', (data) => {
             applyDrawing(data);
-            addDrawingToHistory(data); // Add received drawing to local history
+            addDrawingToHistory(data); 
         });
 
-        socket.on('userJoined', ({ id, username }) => {
-            sendStatusMessage(`${username} joined the room`, 'info');
-            // In a more complex app, you'd send the existing history to the new user here.
-            // For now, clear canvas for new user joining a room to prevent old drawings if rejoining a room.
-            // This is a simplification; a full solution would require sending current state.
-            // clearCanvas(); // Decided against this for now to allow shared drawings persist for new joiners
+        socket.on('userJoined', ({ users }) => {
+            // Update user list UI
+            usersList.innerHTML = ''; // Clear existing list
+            users.forEach(user => {
+                const li = document.createElement('li');
+                li.textContent = user.username + (user.id === socket.id ? ' (You)' : '');
+                usersList.appendChild(li);
+            });
+            sendStatusMessage(`${users.length} user(s) in room`, 'info');
+            redrawCanvas(); // Request a full redraw to get consistent state
+        });
+
+        socket.on('chatMessage', ({ username, message }) => {
+            const li = document.createElement('li');
+            li.innerHTML = `<strong>${username}:</strong> ${message}`;
+            chatMessages.querySelector('ul').appendChild(li);
+            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to bottom
         });
 
         // --- Room Management ---
@@ -827,14 +1024,31 @@
                 currentRoom = roomId;
                 socket.emit('joinRoom', { roomId, username });
                 sendStatusMessage(`Joined room: ${roomId} as ${username}`, 'success');
-                // Reset history and clear canvas for *this* user when joining a new room
                 drawingHistory = []; 
                 historyIndex = -1;
-                redrawCanvas(); // Clear local canvas effectively
+                redrawCanvas(); // Clear local canvas effectively for new room
+                chatMessages.querySelector('ul').innerHTML = '<li>Welcome to the Sketchpad!</li>'; // Clear chat
             } else {
                 sendStatusMessage('Please enter a username and room ID.', 'warning');
             }
         }
+
+        // --- Chat Functions ---
+        function sendMessage() {
+            const message = chatInput.value.trim();
+            if (message && currentRoom) {
+                socket.emit('sendMessage', { roomId: currentRoom, message });
+                chatInput.value = ''; // Clear input
+            } else if (!currentRoom) {
+                sendStatusMessage('Please join a room to chat.', 'warning');
+            }
+        }
+
+        chatInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
 
         // --- Utility Functions ---
         function sendStatusMessage(message, type = 'info') {
@@ -847,10 +1061,10 @@
         document.getElementById('username').value = 'Guest';
         document.getElementById('roomId').value = 'sketch_room';
 
-        resizeCanvas(); // Set initial canvas size
-        window.addEventListener('resize', resizeCanvas); // Add resize listener
-        toggleTool(currentTool); // Set initial tool and button active state
-        setCanvasStyles(); // Initial canvas context styles
+        resizeCanvas(); 
+        // window.addEventListener('resize', resizeCanvas); // Already added inside resizeCanvas itself
+        toggleTool(currentTool); 
+        setCanvasStyles(); 
     </script>
 </body>
 </html> 
