@@ -21,38 +21,35 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.json());
 
-// Serve static files from the React app in production
-if (process.env.NODE_ENV === 'production') {
-  const buildPath = path.join(__dirname, 'client/build');
-  console.log('Build path:', buildPath);
+// Serve static files from the React app
+const buildPath = path.join(__dirname, 'client/build');
+console.log('Build path:', buildPath);
+
+// Check if build directory exists
+if (fs.existsSync(buildPath)) {
+  console.log('Build directory exists');
+  // Serve static files from the React app
+  app.use(express.static(buildPath));
   
-  // Check if build directory exists
-  if (fs.existsSync(buildPath)) {
-    console.log('Build directory exists');
-    // Serve static files from the React app
-    app.use(express.static(buildPath));
+  // Handle React routing, return all requests to React app
+  app.get('*', (req, res) => {
+    const indexPath = path.join(buildPath, 'index.html');
+    console.log('Attempting to serve:', indexPath);
     
-    // Handle React routing, return all requests to React app
-    app.get('*', (req, res, next) => {
-      const indexPath = path.join(buildPath, 'index.html');
-      console.log('Attempting to serve:', indexPath);
-      
-      if (fs.existsSync(indexPath)) {
-        console.log('index.html exists, sending file');
-        res.sendFile(indexPath, (err) => {
-          if (err) {
-            console.error('Error sending index.html:', err);
-            next(err);
-          }
-        });
-      } else {
-        console.error('index.html not found at:', indexPath);
-        next(new Error('index.html not found'));
-      }
-    });
-  } else {
-    console.error('Build directory not found at:', buildPath);
-  }
+    if (fs.existsSync(indexPath)) {
+      console.log('index.html exists, sending file');
+      res.sendFile(indexPath);
+    } else {
+      console.error('index.html not found at:', indexPath);
+      res.status(404).send('index.html not found');
+    }
+  });
+} else {
+  console.error('Build directory not found at:', buildPath);
+  // In development, redirect to the React dev server
+  app.get('*', (req, res) => {
+    res.redirect('http://localhost:3000');
+  });
 }
 
 // Store active rooms and their permissions
