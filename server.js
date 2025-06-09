@@ -17,7 +17,7 @@ const io = socketIo(server, {
 app.use(cors());
 
 // Serve static files from the React app
-const clientBuildPath = path.join(__dirname, 'client', 'build');
+const clientBuildPath = path.join(__dirname, 'client-build');
 console.log('Client build path:', clientBuildPath);
 app.use(express.static(clientBuildPath));
 
@@ -133,5 +133,5 @@ const HOST = process.env.HOST || '0.0.0.0';
 server.listen(PORT, HOST, () => {
   console.log(`Server running at http://${HOST}:${PORT}`);
   console.log('Current directory:', __dirname);
-  console.log('Client build path:', path.join(__dirname, 'client', 'build'));
+  console.log('Client build path:', clientBuildPath);
 }); 

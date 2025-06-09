@@ -3,12 +3,25 @@ services:
     name: collaborative-sketchpad
     env: node
     buildCommand: |
+      echo "Starting build process..."
       npm install
+      echo "Installing client dependencies..."
       cd client
       npm install
+      echo "Building client..."
       CI=false npm run build
+      echo "Moving build files..."
+      mv build ../client-build
       cd ..
-    startCommand: node server.js
+      echo "Build process completed"
+    startCommand: |
+      echo "Starting server..."
+      echo "Current directory: $(pwd)"
+      echo "Listing files:"
+      ls -la
+      echo "Listing client-build:"
+      ls -la client-build
+      node server.js
     envVars:
       - key: PORT
         value: 10000
