@@ -4,14 +4,20 @@ services:
     env: node
     rootDir: .
     buildCommand: |
+      echo "Installing root dependencies..."
       npm install
+      echo "Installing client dependencies..."
       cd client
       npm install
-      npm run build
+      echo "Building client..."
+      CI=false npm run build
+      echo "Build complete"
       cd ..
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: 10000 
+        value: 10000
+      - key: CI
+        value: false 

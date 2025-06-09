@@ -3,6 +3,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -22,19 +23,36 @@ app.use(express.json());
 
 // Serve static files from the React app in production
 if (process.env.NODE_ENV === 'production') {
-  // Serve static files from the React app
-  app.use(express.static(path.join(__dirname, 'client/build')));
+  const buildPath = path.join(__dirname, 'client/build');
+  console.log('Build path:', buildPath);
   
-  // Handle React routing, return all requests to React app
-  app.get('*', (req, res, next) => {
-    const indexPath = path.join(__dirname, 'client/build', 'index.html');
-    res.sendFile(indexPath, (err) => {
-      if (err) {
-        console.error('Error sending index.html:', err);
-        next(err);
+  // Check if build directory exists
+  if (fs.existsSync(buildPath)) {
+    console.log('Build directory exists');
+    // Serve static files from the React app
+    app.use(express.static(buildPath));
+    
+    // Handle React routing, return all requests to React app
+    app.get('*', (req, res, next) => {
+      const indexPath = path.join(buildPath, 'index.html');
+      console.log('Attempting to serve:', indexPath);
+      
+      if (fs.existsSync(indexPath)) {
+        console.log('index.html exists, sending file');
+        res.sendFile(indexPath, (err) => {
+          if (err) {
+            console.error('Error sending index.html:', err);
+            next(err);
+          }
+        });
+      } else {
+        console.error('index.html not found at:', indexPath);
+        next(new Error('index.html not found'));
       }
     });
-  });
+  } else {
+    console.error('Build directory not found at:', buildPath);
+  }
 }
 
 // Store active rooms and their permissions
