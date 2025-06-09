@@ -14,7 +14,7 @@ services:
       cd client
       npm install
       echo "Running build command..."
-      CI=false npm run build
+      CI=false GENERATE_SOURCEMAP=false npm run build
       
       echo "Verifying build..."
       if [ -d "build" ]; then

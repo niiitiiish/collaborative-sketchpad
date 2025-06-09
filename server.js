@@ -5,6 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const cors = require('cors');
 const { networkInterfaces } = require('os');
+const { execSync } = require('child_process');
 
 const app = express();
 const server = http.createServer(app);
@@ -28,10 +29,33 @@ console.log('Environment:', process.env.NODE_ENV);
 console.log('Current directory:', __dirname);
 console.log('Directory contents:', fs.readdirSync(__dirname));
 
+// Function to build the client
+function buildClient() {
+  try {
+    console.log('Building client...');
+    execSync('cd client && CI=false GENERATE_SOURCEMAP=false npm run build', { stdio: 'inherit' });
+    console.log('Client build successful');
+    return true;
+  } catch (error) {
+    console.error('Error building client:', error);
+    return false;
+  }
+}
+
 // Check if build directory exists
 if (fs.existsSync(buildPath)) {
   console.log('Build directory exists at:', buildPath);
   console.log('Build directory contents:', fs.readdirSync(buildPath));
+  
+  // Check if build directory is empty
+  const buildContents = fs.readdirSync(buildPath);
+  if (buildContents.length === 0) {
+    console.log('Build directory is empty, rebuilding...');
+    if (!buildClient()) {
+      throw new Error('Failed to build client');
+    }
+  }
+  
   // Serve static files from the React app
   app.use(express.static(buildPath));
   
@@ -55,24 +79,14 @@ if (fs.existsSync(buildPath)) {
   if (fs.existsSync(clientPath)) {
     console.log('Client directory:', fs.readdirSync(clientPath));
     
-    // Check if build exists in client directory
-    const clientBuildPath = path.join(clientPath, 'build');
-    if (fs.existsSync(clientBuildPath)) {
-      console.log('Found build in client directory');
+    // Try to build the client
+    if (buildClient()) {
       // Serve static files from the client build directory
-      app.use(express.static(clientBuildPath));
+      app.use(express.static(buildPath));
       app.get('*', (req, res) => {
-        res.sendFile(path.join(clientBuildPath, 'index.html'));
+        res.sendFile(path.join(buildPath, 'index.html'));
       });
     } else {
-      console.log('No build directory found in client');
-      // Try to create build directory
-      try {
-        fs.mkdirSync(clientBuildPath, { recursive: true });
-        console.log('Created build directory');
-      } catch (error) {
-        console.error('Error creating build directory:', error);
-      }
       // In production, serve a 404 page
       if (process.env.NODE_ENV === 'production') {
         app.get('*', (req, res) => {
