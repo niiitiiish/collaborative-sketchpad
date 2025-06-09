@@ -1,25 +1,18 @@
 {
-  "name": "collaborative-sketchpad",
+  "name": "simple-sketchpad",
   "version": "1.0.0",
-  "description": "A real-time collaborative sketchpad application",
+  "description": "A simple collaborative sketchpad",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "build": "cd client && npm install && npm run build && cd .. && mkdir -p client/build && cp -r client/build/* client/build/ && ls -la client/build/",
-    "dev": "nodemon server.js",
-    "client": "cd client && npm start",
-    "dev:full": "concurrently \"npm run dev\" \"npm run client\""
+    "dev": "nodemon server.js"
   },
   "dependencies": {
-    "cors": "^2.8.5",
     "express": "^4.18.2",
-    "socket.io": "^4.7.4"
+    "socket.io": "^4.7.4",
+    "cors": "^2.8.5"
   },
   "devDependencies": {
-    "nodemon": "^3.0.3",
-    "concurrently": "^8.2.2"
-  },
-  "engines": {
-    "node": ">=14.0.0"
+    "nodemon": "^3.0.3"
   }
 } 

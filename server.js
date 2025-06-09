@@ -1,9 +1,7 @@
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
-const path = require('path');
 const cors = require('cors');
-const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -14,130 +12,33 @@ const io = socketIo(server, {
   }
 });
 
-// Enable CORS
 app.use(cors());
+app.use(express.static('public'));
 
-// Serve static files from the React app
-const clientBuildPath = path.join(__dirname, 'client', 'build');
-console.log('Client build path:', clientBuildPath);
-
-// Check if build directory exists
-if (!fs.existsSync(clientBuildPath)) {
-  console.error('Build directory not found at:', clientBuildPath);
-  console.log('Current directory:', __dirname);
-  console.log('Directory contents:', fs.readdirSync(__dirname));
-  process.exit(1);
-}
-
-app.use(express.static(clientBuildPath));
-
-// Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
-  const indexPath = path.join(clientBuildPath, 'index.html');
-  console.log('Serving index.html from:', indexPath);
-  
-  if (!fs.existsSync(indexPath)) {
-    console.error('index.html not found at:', indexPath);
-    console.log('Build directory contents:', fs.readdirSync(clientBuildPath));
-    res.status(500).send('Build files not found. Please check server logs.');
-    return;
-  }
-  
-  res.sendFile(indexPath);
-});
-
-// Store active rooms and their permissions
+// Store active rooms
 const rooms = new Map();
 
-// Socket.IO connection handling
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
+  console.log('User connected:', socket.id);
 
-  // Handle room joining
   socket.on('joinRoom', ({ roomId, username }) => {
-    console.log(`Client ${socket.id} joining room ${roomId} as ${username}`);
     socket.join(roomId);
-    
-    // Initialize room if it doesn't exist
     if (!rooms.has(roomId)) {
-      rooms.set(roomId, {
-        users: new Map(),
-        permissions: new Map()
-      });
+      rooms.set(roomId, new Set());
     }
-    
-    // Add user to room
-    const room = rooms.get(roomId);
-    room.users.set(socket.id, username);
-    
-    // First user in room becomes host
-    const isHost = room.users.size === 1;
-    room.permissions.set(socket.id, isHost);
-    
-    // Notify the user about their host status
-    socket.emit('hostStatus', isHost);
-    
-    // Notify everyone in the room about the updated user list
-    io.to(roomId).emit('userJoined', {
-      users: Array.from(room.users.entries()),
-      permissions: Array.from(room.permissions.entries())
-    });
+    rooms.get(roomId).add(socket.id);
+    socket.to(roomId).emit('userJoined', { id: socket.id, username });
   });
 
-  // Handle drawing events
-  socket.on('draw', (data) => {
-    const { roomId, data: shape } = data;
-    const room = rooms.get(roomId);
-    
-    if (room && room.permissions.get(socket.id)) {
-      socket.to(roomId).emit('draw', shape);
-    }
+  socket.on('draw', ({ roomId, data }) => {
+    socket.to(roomId).emit('draw', data);
   });
 
-  // Handle permission requests
-  socket.on('requestPermission', ({ roomId }) => {
-    const room = rooms.get(roomId);
-    if (room) {
-      const username = room.users.get(socket.id);
-      // Notify all users in the room about the permission request
-      io.to(roomId).emit('permissionRequest', { userId: socket.id, username });
-    }
-  });
-
-  // Handle permission grants
-  socket.on('grantPermission', ({ roomId, userId }) => {
-    const room = rooms.get(roomId);
-    if (room && room.permissions.get(socket.id)) { // Only host can grant permissions
-      room.permissions.set(userId, true);
-      io.to(roomId).emit('permissionUpdate', { userId, granted: true });
-    }
-  });
-
-  // Handle disconnection
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
-    
-    // Remove user from all rooms
-    rooms.forEach((room, roomId) => {
-      if (room.users.has(socket.id)) {
-        room.users.delete(socket.id);
-        room.permissions.delete(socket.id);
-        
-        // If host left, assign new host
-        if (room.users.size > 0 && !Array.from(room.permissions.values()).some(p => p)) {
-          const newHostId = room.users.keys().next().value;
-          room.permissions.set(newHostId, true);
-          io.to(newHostId).emit('hostStatus', true);
-        }
-        
-        // Notify others in the room about the updated user list
-        io.to(roomId).emit('userJoined', {
-          users: Array.from(room.users.entries()),
-          permissions: Array.from(room.permissions.entries())
-        });
-        
-        // Clean up empty rooms
-        if (room.users.size === 0) {
+    rooms.forEach((users, roomId) => {
+      if (users.has(socket.id)) {
+        users.delete(socket.id);
+        if (users.size === 0) {
           rooms.delete(roomId);
         }
       }
@@ -145,12 +46,9 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
 
 server.listen(PORT, HOST, () => {
   console.log(`Server running at http://${HOST}:${PORT}`);
-  console.log('Current directory:', __dirname);
-  console.log('Client build path:', clientBuildPath);
-  console.log('Directory contents:', fs.readdirSync(__dirname));
 }); 

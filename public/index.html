@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Sketchpad</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            touch-action: none;
+        }
+        #canvas {
+            border: 1px solid #000;
+            cursor: crosshair;
+            touch-action: none;
+        }
+        .controls {
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        input, button {
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            background: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+        .status {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="controls">
+        <input type="text" id="username" placeholder="Your name">
+        <input type="text" id="roomId" placeholder="Room ID">
+        <button onclick="joinRoom()">Join Room</button>
+    </div>
+    <div class="status" id="status">Not connected</div>
+    <canvas id="canvas"></canvas>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const statusDiv = document.getElementById('status');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+        let currentRoom = null;
+
+        // Set canvas size
+        function resizeCanvas() {
+            canvas.width = window.innerWidth - 40;
+            canvas.height = window.innerHeight - 150;
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Drawing functions
+        function getCoordinates(e) {
+            if (e.touches) {
+                const rect = canvas.getBoundingClientRect();
+                return {
+                    x: e.touches[0].clientX - rect.left,
+                    y: e.touches[0].clientY - rect.top
+                };
+            }
+            return {
+                x: e.offsetX,
+                y: e.offsetY
+            };
+        }
+
+        function startDrawing(e) {
+            e.preventDefault();
+            isDrawing = true;
+            const coords = getCoordinates(e);
+            lastX = coords.x;
+            lastY = coords.y;
+        }
+
+        function draw(e) {
+            e.preventDefault();
+            if (!isDrawing) return;
+            const coords = getCoordinates(e);
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
+            
+            if (currentRoom) {
+                socket.emit('draw', {
+                    roomId: currentRoom,
+                    data: {
+                        x1: lastX,
+                        y1: lastY,
+                        x2: coords.x,
+                        y2: coords.y
+                    }
+                });
+            }
+            
+            lastX = coords.x;
+            lastY = coords.y;
+        }
+
+        function stopDrawing(e) {
+            e.preventDefault();
+            isDrawing = false;
+        }
+
+        // Event listeners
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // Touch events
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
+
+        // Socket events
+        socket.on('connect', () => {
+            statusDiv.textContent = 'Connected to server';
+            statusDiv.style.background = '#d4edda';
+        });
+
+        socket.on('disconnect', () => {
+            statusDiv.textContent = 'Disconnected from server';
+            statusDiv.style.background = '#f8d7da';
+        });
+
+        socket.on('draw', (data) => {
+            ctx.beginPath();
+            ctx.moveTo(data.x1, data.y1);
+            ctx.lineTo(data.x2, data.y2);
+            ctx.stroke();
+        });
+
+        socket.on('userJoined', ({ id, username }) => {
+            statusDiv.textContent = `${username} joined the room`;
+            statusDiv.style.background = '#d4edda';
+        });
+
+        // Room functions
+        function joinRoom() {
+            const username = document.getElementById('username').value;
+            const roomId = document.getElementById('roomId').value;
+            if (username && roomId) {
+                currentRoom = roomId;
+                socket.emit('joinRoom', { roomId, username });
+                statusDiv.textContent = `Joined room: ${roomId}`;
+                statusDiv.style.background = '#d4edda';
+            }
+        }
+    </script>
+</body>
+</html> 
