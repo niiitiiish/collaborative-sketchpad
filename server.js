@@ -11,9 +11,7 @@ const server = http.createServer(app);
 // Configure CORS for production
 const io = socketIo(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' 
-      ? "*" // Allow all origins in production
-      : "http://localhost:3000",
+    origin: "*", // Allow all origins in production
     methods: ["GET", "POST"]
   }
 });
