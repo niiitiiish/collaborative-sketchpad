@@ -3,17 +3,25 @@ services:
     name: collaborative-sketchpad
     env: node
     buildCommand: |
+      echo "Starting build process..."
+      echo "Current directory: $(pwd)"
       echo "Installing root dependencies..."
       npm install
+      echo "Creating client directory if it doesn't exist..."
+      mkdir -p client
       echo "Installing client dependencies..."
       cd client
       npm install
       echo "Building client..."
       npm run build
+      echo "Verifying build directory..."
+      ls -la build/
       echo "Moving build to correct location..."
-      mkdir -p ../client/build
-      cp -r build/* ../client/build/
       cd ..
+      mkdir -p client/build
+      cp -r client/build/* client/build/
+      echo "Verifying final build location..."
+      ls -la client/build/
       echo "Build complete"
     startCommand: npm start
     envVars:

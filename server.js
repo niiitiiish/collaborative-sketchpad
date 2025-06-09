@@ -28,10 +28,12 @@ const buildPath = path.join(__dirname, 'client/build');
 console.log('Build path:', buildPath);
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Current directory:', __dirname);
+console.log('Directory contents:', fs.readdirSync(__dirname));
 
 // Check if build directory exists
 if (fs.existsSync(buildPath)) {
-  console.log('Build directory exists');
+  console.log('Build directory exists at:', buildPath);
+  console.log('Build directory contents:', fs.readdirSync(buildPath));
   // Serve static files from the React app
   app.use(express.static(buildPath));
   
@@ -59,12 +61,19 @@ if (fs.existsSync(buildPath)) {
     path.join(__dirname, 'build'),
     path.join(__dirname, 'client/build'),
     path.join(__dirname, '../client/build'),
-    path.join(__dirname, '../../client/build')
+    path.join(__dirname, '../../client/build'),
+    path.join(__dirname, 'dist'),
+    path.join(__dirname, 'client/dist')
   ];
   
   console.log('Searching for build directory in possible locations:');
   possiblePaths.forEach(p => {
-    console.log(`Checking ${p}: ${fs.existsSync(p) ? 'exists' : 'not found'}`);
+    if (fs.existsSync(p)) {
+      console.log(`Found build directory at: ${p}`);
+      console.log('Contents:', fs.readdirSync(p));
+    } else {
+      console.log(`Not found: ${p}`);
+    }
   });
   
   // In development, redirect to the React dev server
