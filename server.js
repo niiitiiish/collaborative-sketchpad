@@ -17,11 +17,15 @@ const io = socketIo(server, {
 app.use(cors());
 
 // Serve static files from the React app
-app.use(express.static(path.join(__dirname, 'client/build')));
+const clientBuildPath = path.join(__dirname, 'client', 'build');
+console.log('Client build path:', clientBuildPath);
+app.use(express.static(clientBuildPath));
 
 // Handle React routing, return all requests to React app
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, 'client/build', 'index.html'));
+  const indexPath = path.join(clientBuildPath, 'index.html');
+  console.log('Serving index.html from:', indexPath);
+  res.sendFile(indexPath);
 });
 
 // Store active rooms and their permissions
@@ -128,4 +132,6 @@ const HOST = process.env.HOST || '0.0.0.0';
 
 server.listen(PORT, HOST, () => {
   console.log(`Server running at http://${HOST}:${PORT}`);
+  console.log('Current directory:', __dirname);
+  console.log('Client build path:', path.join(__dirname, 'client', 'build'));
 }); 

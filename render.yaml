@@ -6,13 +6,16 @@ services:
       npm install
       cd client
       npm install
-      npm run build
+      CI=false npm run build
+      cd ..
     startCommand: node server.js
     envVars:
       - key: PORT
         value: 10000
       - key: HOST
         value: "0.0.0.0"
+      - key: NODE_ENV
+        value: "production"
     healthCheckPath: /
     autoDeploy: true
     plan: free
