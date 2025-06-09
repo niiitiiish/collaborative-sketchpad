@@ -29,13 +29,30 @@ console.log('Build path:', buildPath);
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Current directory:', __dirname);
 
-// Serve static files from the React app
-app.use(express.static(buildPath));
-
-// Handle React routing, return all requests to React app
-app.get('*', (req, res) => {
-  res.sendFile(path.join(buildPath, 'index.html'));
-});
+// Check if build directory exists
+if (fs.existsSync(buildPath)) {
+  console.log('Build directory exists at:', buildPath);
+  console.log('Build directory contents:', fs.readdirSync(buildPath));
+  // Serve static files from the React app
+  app.use(express.static(buildPath));
+  
+  // Handle React routing, return all requests to React app
+  app.get('*', (req, res) => {
+    const indexPath = path.join(buildPath, 'index.html');
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      console.error('index.html not found at:', indexPath);
+      res.status(404).send('index.html not found');
+    }
+  });
+} else {
+  console.error('Build directory not found at:', buildPath);
+  // In development, redirect to the React dev server
+  app.get('*', (req, res) => {
+    res.redirect('http://localhost:3000');
+  });
+}
 
 // Store active rooms and their permissions
 const rooms = new Map();

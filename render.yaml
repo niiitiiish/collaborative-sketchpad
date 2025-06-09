@@ -7,8 +7,16 @@ services:
       npm install
       cd client
       npm install
+      echo "Building client..."
       npm run build
+      echo "Verifying build..."
+      ls -la build/
       cd ..
+      echo "Moving build to correct location..."
+      mkdir -p client/build
+      cp -r client/build/* client/build/
+      echo "Verifying final build..."
+      ls -la client/build/
     startCommand: node server.js
     envVars:
       - key: NODE_ENV
