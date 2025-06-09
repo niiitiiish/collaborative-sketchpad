@@ -6,6 +6,7 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
   const [lines, setLines] = useState([]);
   const [isDrawing, setIsDrawing] = useState(false);
   const stageRef = useRef(null);
+  const lastLineRef = useRef(null);
 
   useEffect(() => {
     if (!socket) return;
@@ -17,7 +18,10 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
 
     socket.on('undo', () => {
       console.log('Received undo event');
-      setLines((prevLines) => prevLines.slice(0, -1));
+      setLines((prevLines) => {
+        if (prevLines.length === 0) return prevLines;
+        return prevLines.slice(0, -1);
+      });
     });
 
     return () => {
@@ -35,6 +39,7 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
     setIsDrawing(true);
     const pos = e.target.getStage().getPointerPosition();
     const newLine = { points: [pos.x, pos.y] };
+    lastLineRef.current = newLine;
     setLines((prevLines) => [...prevLines, newLine]);
   };
 
@@ -53,6 +58,7 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
       points: [...lastLine.points, point.x, point.y]
     };
     
+    lastLineRef.current = updatedLine;
     setLines((prevLines) => [...prevLines.slice(0, -1), updatedLine]);
 
     // Emit drawing data to other users
@@ -66,6 +72,7 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
   const handleMouseUp = () => {
     console.log('Mouse up - Stopping drawing');
     setIsDrawing(false);
+    lastLineRef.current = null;
   };
 
   const handleRequestPermission = () => {
@@ -93,7 +100,11 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
         </Typography>
         <Box sx={{ display: 'flex', gap: 2 }}>
           {hasPermission && (
-            <Button variant="contained" onClick={handleUndo} disabled={lines.length === 0}>
+            <Button 
+              variant="contained" 
+              onClick={handleUndo} 
+              disabled={lines.length === 0}
+            >
               Undo
             </Button>
           )}
