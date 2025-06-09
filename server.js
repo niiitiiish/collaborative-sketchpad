@@ -15,34 +15,74 @@ const io = socketIo(server, {
 app.use(cors());
 app.use(express.static('public'));
 
-// Store active rooms
+// Store active rooms and users
 const rooms = new Map();
+const users = new Map();
 
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
   socket.on('joinRoom', ({ roomId, username }) => {
+    // Leave previous room if any
+    if (users.has(socket.id)) {
+      const prevRoom = users.get(socket.id).roomId;
+      socket.leave(prevRoom);
+      if (rooms.has(prevRoom)) {
+        rooms.get(prevRoom).delete(socket.id);
+        if (rooms.get(prevRoom).size === 0) {
+          rooms.delete(prevRoom);
+        }
+      }
+    }
+
+    // Join new room
     socket.join(roomId);
     if (!rooms.has(roomId)) {
       rooms.set(roomId, new Set());
     }
     rooms.get(roomId).add(socket.id);
+    
+    // Store user info
+    users.set(socket.id, { roomId, username });
+    
+    // Notify room
     socket.to(roomId).emit('userJoined', { id: socket.id, username });
+    socket.emit('roomJoined', { 
+      roomId, 
+      users: Array.from(rooms.get(roomId)).map(id => ({
+        id,
+        username: users.get(id)?.username || 'Anonymous'
+      }))
+    });
   });
 
   socket.on('draw', ({ roomId, data }) => {
     socket.to(roomId).emit('draw', data);
   });
 
+  socket.on('chatMessage', ({ roomId, message, username }) => {
+    io.to(roomId).emit('chatMessage', {
+      id: socket.id,
+      username,
+      message,
+      timestamp: new Date().toISOString()
+    });
+  });
+
   socket.on('disconnect', () => {
-    rooms.forEach((users, roomId) => {
-      if (users.has(socket.id)) {
-        users.delete(socket.id);
-        if (users.size === 0) {
+    const user = users.get(socket.id);
+    if (user) {
+      const { roomId } = user;
+      if (rooms.has(roomId)) {
+        rooms.get(roomId).delete(socket.id);
+        if (rooms.get(roomId).size === 0) {
           rooms.delete(roomId);
+        } else {
+          io.to(roomId).emit('userLeft', { id: socket.id, username: user.username });
         }
       }
-    });
+      users.delete(socket.id);
+    }
   });
 });
 

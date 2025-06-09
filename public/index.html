@@ -3,1020 +3,456 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Sketchpad Chat</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+    <title>Collaborative Sketchpad</title>
+    <script src="/socket.io/socket.io.js"></script>
     <style>
-        /* CSS Variables for Theming */
         :root {
-            --primary-color: #00bcd4; /* Cyan 500 - vibrant blue */
-            --primary-hover-color: #00acc1; /* Cyan 600 */
-            --secondary-color: #673ab7; /* Deep Purple 500 - vibrant purple */
-            --accent-color: #8bc34a; /* Light Green 500 - vibrant green */
-            --background-light: #f8fafc; /* Slate-50 */
-            --background-dark: #1a202c; /* Darker background for contrast */
-            --surface-light: #ffffff; /* White for controls, cards */
-            --surface-dark: #2d3748; /* Darker surface for controls, cards */
-            --text-color-light: #2d3748; /* Dark text */
-            --text-color-dark: #edf2f7; /* Light text */
-            --border-color-light: #e2e8f0; /* Light border */
-            --border-color-dark: #4a5568; /* Dark border */
-            --shadow-light: 0 5px 15px rgba(0, 0, 0, 0.1);
-            --shadow-dark: 0 5px 15px rgba(0, 0, 0, 0.3);
-            --glass-blur: 10px;
-            --glass-bg-light: rgba(255, 255, 255, 0.15);
-            --glass-bg-dark: rgba(0, 0, 0, 0.25);
-            --message-bg-user: #e3f2fd;
-            --message-bg-ai: #f5f5f5;
-            --message-bg-user-dark: #1a365d;
-            --message-bg-ai-dark: #2d3748;
+            --primary-color: #4a90e2;
+            --secondary-color: #2c3e50;
+            --background-color: #f5f6fa;
+            --text-color: #2c3e50;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
-        /* Global Styles & Resets */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
-        
+
         body {
-            font-family: 'Inter', sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
-            background: linear-gradient(135deg, var(--background-light) 0%, #e0f2f7 100%); /* Subtle gradient */
-            color: var(--text-color-light);
-            transition: background 0.5s ease, color 0.3s ease;
         }
 
-        /* Chat Header */
-        .chat-header {
-            padding: 15px 25px;
-            background: var(--surface-light);
-            box-shadow: var(--shadow-light);
+        .header {
+            background: white;
+            padding: 1rem;
+            box-shadow: var(--shadow);
             display: flex;
-            align-items: center;
             justify-content: space-between;
-            z-index: 1000;
-            border-bottom: 1px solid var(--border-color-light);
+            align-items: center;
         }
 
-        .chat-header-title {
-            font-size: 1.5em;
-            font-weight: 700;
+        .header h1 {
             color: var(--primary-color);
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-size: 1.5rem;
         }
 
-        .chat-header-title::before {
-            content: "🤖";
-            font-size: 1.2em;
-        }
-
-        .room-info {
+        .join-form {
             display: flex;
-            gap: 15px;
+            gap: 1rem;
             align-items: center;
         }
 
-        /* Main Chat Area */
-        .chat-container {
-            flex: 1;
-            display: flex;
-            overflow: hidden;
+        .join-form input {
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
         }
 
-        .chat-messages {
-            flex: 1;
-            padding: 20px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
-
-        .message {
-            max-width: 80%;
-            padding: 12px 16px;
-            border-radius: 15px;
-            position: relative;
-            animation: messageAppear 0.3s ease;
-        }
-
-        @keyframes messageAppear {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .message.user {
-            align-self: flex-end;
-            background: var(--message-bg-user);
-            border-bottom-right-radius: 5px;
-        }
-
-        .message.ai {
-            align-self: flex-start;
-            background: var(--message-bg-ai);
-            border-bottom-left-radius: 5px;
-        }
-
-        .message.system {
-            align-self: center;
-            background: var(--surface-light);
-            border: 1px solid var(--border-color-light);
-            font-size: 0.9em;
-            color: var(--text-color-light);
-            opacity: 0.8;
-        }
-
-        .message-header {
-            font-size: 0.8em;
-            margin-bottom: 5px;
-            opacity: 0.7;
-        }
-
-        .message-content {
-            word-break: break-word;
-        }
-
-        /* Input Area */
-        .chat-input-area {
-            padding: 15px;
-            background: var(--surface-light);
-            border-top: 1px solid var(--border-color-light);
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-
-        .chat-input-wrapper {
-            flex: 1;
-            position: relative;
-        }
-
-        .chat-input {
-            width: 100%;
-            padding: 12px 20px;
-            padding-right: 50px;
-            border: 1px solid var(--border-color-light);
-            border-radius: 25px;
-            font-size: 1em;
-            background: var(--surface-light);
-            color: var(--text-color-light);
-            transition: all 0.3s ease;
-        }
-
-        .chat-input:focus {
-            outline: none;
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
-        }
-
-        .send-button {
-            position: absolute;
-            right: 5px;
-            top: 50%;
-            transform: translateY(-50%);
+        .join-form button {
             background: var(--primary-color);
             color: white;
             border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: background 0.3s;
         }
 
-        .send-button:hover {
-            background: var(--primary-hover-color);
-            transform: translateY(-50%) scale(1.05);
+        .join-form button:hover {
+            background: #357abd;
         }
 
-        .send-button:active {
-            transform: translateY(-50%) scale(0.95);
-        }
-
-        /* Tools Panel */
-        .tools-panel {
-            width: 300px;
-            background: var(--surface-light);
-            border-left: 1px solid var(--border-color-light);
-            padding: 20px;
+        .main-content {
             display: flex;
-            flex-direction: column;
-            gap: 20px;
-            overflow-y: auto;
+            flex: 1;
+            gap: 1rem;
+            padding: 1rem;
+            height: calc(100vh - 80px);
         }
 
-        .tools-section {
-            background: var(--surface-light);
-            border-radius: 10px;
-            padding: 15px;
-            box-shadow: var(--shadow-light);
-        }
-
-        .tools-section h3 {
-            color: var(--primary-color);
-            margin-bottom: 15px;
-            font-size: 1.1em;
-            font-weight: 600;
-        }
-
-        .tool-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 10px;
-        }
-
-        .tool-button {
-            padding: 10px;
-            border: 1px solid var(--border-color-light);
-            border-radius: 8px;
-            background: var(--surface-light);
-            color: var(--text-color-light);
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 5px;
-        }
-
-        .tool-button:hover {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        .tool-button.active {
-            background: var(--primary-color);
-            color: white;
-            border-color: var(--primary-color);
-        }
-
-        /* Canvas Area */
         .canvas-container {
+            flex: 1;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
             position: relative;
-            width: 100%;
-            height: 300px;
-            background: var(--surface-light);
-            border-radius: 10px;
             overflow: hidden;
-            margin: 10px 0;
         }
 
         #canvas {
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
             cursor: crosshair;
         }
 
-        /* On-Canvas Text Input */
-        #textInput {
-            position: absolute;
-            border: 2px dashed var(--secondary-color);
-            padding: 8px;
-            font-family: inherit;
-            font-size: 16px; /* Default, will be overridden by JS */
-            line-height: 1.3;
-            resize: none;
-            overflow: hidden;
-            background: rgba(255, 255, 255, 0.95); /* Slightly less transparent */
-            color: var(--text-color-light);
-            box-shadow: var(--shadow-light);
-            z-index: 10;
-            display: none;
-            border-radius: 6px;
+        .tools {
+            width: 60px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
         }
 
-        /* Glassmorphism Effect */
-        .glass-panel {
-            background: var(--glass-bg-light);
-            backdrop-filter: blur(var(--glass-blur));
-            border: 1px solid rgba(255, 255, 255, 0.18);
-            border-radius: 12px;
-            box-shadow: var(--shadow-light);
+        .tool-btn {
+            width: 40px;
+            height: 40px;
+            border: none;
+            border-radius: 8px;
+            background: #f8f9fa;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
         }
 
-        /* Responsive Adjustments */
-        @media (max-width: 1024px) {
-            .tools-panel {
-                width: 200px;
-                padding: 15px;
-            }
-            .chat-header {
-                gap: 10px;
-            }
-            .chat-header-title {
-                font-size: 1.5em;
-            }
+        .tool-btn:hover {
+            background: #e9ecef;
+        }
+
+        .tool-btn.active {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .chat-container {
+            width: 300px;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: var(--primary-color);
+            color: white;
+        }
+
+        .message.other {
+            align-self: flex-start;
+            background: #e9ecef;
+        }
+
+        .message.system {
+            align-self: center;
+            background: #f8f9fa;
+            font-style: italic;
+            font-size: 0.8rem;
+        }
+
+        .chat-input {
+            padding: 1rem;
+            border-top: 1px solid #eee;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 0.5rem;
+            border: 1px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 0.9rem;
+        }
+
+        .chat-input button {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .chat-input button:hover {
+            background: #357abd;
+        }
+
+        .color-picker {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+
+        .size-slider {
+            width: 100%;
+            margin-top: 0.5rem;
         }
 
         @media (max-width: 768px) {
-            .chat-container {
+            .main-content {
                 flex-direction: column;
             }
-            .tools-panel {
-                width: 100%;
-                border-left: none;
-                border-top: 1px solid var(--border-color-light);
-            }
-            .message {
-                max-width: 90%;
-            }
-            .room-info {
-                display: none;
-            }
-            .chat-input-area {
-                padding: 10px;
-            }
-            .chat-input {
-                width: 100%;
-            }
-            .send-button {
-                position: static;
-                transform: none;
-                width: 100%;
-                border-radius: 0;
-                padding: 12px 20px;
-            }
-        }
 
-        /* Dark Mode */
-        @media (prefers-color-scheme: dark) {
-            body {
-                background: linear-gradient(135deg, var(--background-dark) 0%, #2a3b4c 100%);
-                color: var(--text-color-dark);
+            .tools {
+                width: 100%;
+                flex-direction: row;
+                justify-content: center;
             }
-            .chat-header,
-            .chat-input-area,
-            .tools-panel {
-                background: var(--surface-dark);
-                border-color: var(--border-color-dark);
-            }
-            .message.user {
-                background: var(--message-bg-user-dark);
-                color: var(--text-color-dark);
-            }
-            .message.ai {
-                background: var(--message-bg-ai-dark);
-                color: var(--text-color-dark);
-            }
-            .message.system {
-                background: var(--surface-dark);
-                border-color: var(--border-color-dark);
-                color: var(--text-color-dark);
-            }
-            .chat-input {
-                background: var(--surface-dark);
-                color: var(--text-color-dark);
-                border-color: var(--border-color-dark);
-            }
-            .tool-button {
-                background: var(--surface-dark);
-                color: var(--text-color-dark);
-                border-color: var(--border-color-dark);
-            }
-            .canvas-container {
-                background: var(--canvas-bg-dark);
-            }
-            #canvas {
-                box-shadow: 0 0 20px rgba(0,0,0,0.3);
-            }
-            .glass-panel {
-                background: var(--glass-bg-dark);
-                border: 1px solid rgba(255, 255, 255, 0.05);
-                box-shadow: var(--shadow-dark);
+
+            .chat-container {
+                width: 100%;
+                height: 300px;
             }
         }
     </style>
 </head>
 <body>
-    <div class="chat-header">
-        <div class="chat-header-title">AI Sketchpad Chat</div>
-        <div class="room-info">
-            <input type="text" id="username" placeholder="Your name" value="Guest">
-            <input type="text" id="roomId" placeholder="Room ID" value="sketch_room">
-            <button onclick="joinRoom()" id="joinRoomBtn">Join Room</button>
+    <div class="header">
+        <h1>Collaborative Sketchpad</h1>
+        <div class="join-form">
+            <input type="text" id="username" placeholder="Your name" maxlength="20">
+            <input type="text" id="roomId" placeholder="Room ID" maxlength="20">
+            <button onclick="joinRoom()">Join Room</button>
         </div>
     </div>
 
-    <div class="chat-container">
-        <div class="chat-messages" id="chatMessages">
-            <div class="message system">
-                Welcome to AI Sketchpad Chat! Join a room to start collaborating.
-            </div>
+    <div class="main-content">
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
         </div>
-
-        <div class="tools-panel">
-            <div class="tools-section">
-                <h3>Drawing Tools</h3>
-                <div class="tool-grid">
-                    <button class="tool-button" onclick="toggleTool('pen')" id="penBtn">
-                        ✏️ Pen
-                    </button>
-                    <button class="tool-button" onclick="toggleTool('eraser')" id="eraserBtn">
-                        🧹 Eraser
-                    </button>
-                    <button class="tool-button" onclick="toggleTool('line')" id="lineBtn">
-                        📏 Line
-                    </button>
-                    <button class="tool-button" onclick="toggleTool('rectangle')" id="rectangleBtn">
-                        ⬜ Rectangle
-                    </button>
-                    <button class="tool-button" onclick="toggleTool('circle')" id="circleBtn">
-                        ⭕ Circle
-                    </button>
-                    <button class="tool-button" onclick="toggleTool('text')" id="textBtn">
-                        📝 Text
-                    </button>
-                </div>
-            </div>
-
-            <div class="tools-section">
-                <h3>Properties</h3>
-                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-                    <label>Color:</label>
-                    <input type="color" id="colorPicker" value="#000000">
-                </div>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <label>Size:</label>
-                    <input type="range" id="lineWidthSlider" min="1" max="50" value="2" style="flex: 1;">
-                </div>
-            </div>
-
-            <div class="tools-section">
-                <h3>History</h3>
-                <div style="display: flex; gap: 10px;">
-                    <button class="tool-button" onclick="undo()">↩️ Undo</button>
-                    <button class="tool-button" onclick="redo()">↪️ Redo</button>
-                </div>
-            </div>
-
-            <div class="canvas-container">
-                <canvas id="canvas"></canvas>
-                <textarea id="textInput" style="display: none;"></textarea>
+        <div class="tools">
+            <button class="tool-btn active" onclick="setTool('pen')" title="Pen">✏️</button>
+            <button class="tool-btn" onclick="setTool('eraser')" title="Eraser">🧹</button>
+            <input type="color" class="color-picker" id="colorPicker" value="#000000" title="Color">
+            <input type="range" class="size-slider" id="sizeSlider" min="1" max="50" value="5" title="Size">
+        </div>
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessages"></div>
+            <div class="chat-input">
+                <input type="text" id="messageInput" placeholder="Type a message...">
+                <button onclick="sendMessage()">Send</button>
             </div>
         </div>
     </div>
 
-    <div class="chat-input-area">
-        <div class="chat-input-wrapper">
-            <input type="text" id="chatInput" class="chat-input" placeholder="Type your message...">
-            <button class="send-button" onclick="sendMessage()">➤</button>
-        </div>
-    </div>
-
-    <script src="/socket.io/socket.io.js"></script>
     <script>
-        // --- DOM Elements ---
         const socket = io();
         const canvas = document.getElementById('canvas');
         const ctx = canvas.getContext('2d');
-        const statusDiv = document.getElementById('status');
-        const colorPicker = document.getElementById('colorPicker');
-        const lineWidthSlider = document.getElementById('lineWidthSlider');
-        const penBtn = document.getElementById('penBtn');
-        const eraserBtn = document.getElementById('eraserBtn');
-        const lineBtn = document.getElementById('lineBtn');
-        const rectangleBtn = document.getElementById('rectangleBtn');
-        const circleBtn = document.getElementById('circleBtn');
-        const textBtn = document.getElementById('textBtn');
-        const joinRoomBtn = document.getElementById('joinRoomBtn');
-        const textInput = document.getElementById('textInput');
-        const chatInput = document.getElementById('chatInput');
-        const chatMessages = document.getElementById('chatMessages');
-        const usersList = document.getElementById('usersList');
-
-        // --- Drawing State Variables ---
         let isDrawing = false;
-        let startPoint = { x: 0, y: 0 };
-        let lastPoint = { x: 0, y: 0 }; 
-        let currentRoom = null;
         let currentTool = 'pen';
-        let currentColor = colorPicker.value;
-        let currentLineWidth = parseInt(lineWidthSlider.value);
-        let drawingHistory = [];
-        let historyIndex = -1; 
-        let currentStroke = null; // To group pen/eraser strokes
+        let currentColor = '#000000';
+        let currentSize = 5;
+        let currentRoom = null;
+        let currentUsername = null;
 
-        // --- Canvas Initialization and Resizing ---
-        function setCanvasStyles() {
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-            ctx.font = '16px Inter, sans-serif'; 
-            ctx.textAlign = 'left';
-            ctx.textBaseline = 'top';
-        }
-
+        // Set canvas size
         function resizeCanvas() {
             const container = canvas.parentElement;
-            const containerWidth = container.clientWidth;
-            const containerHeight = container.clientHeight;
-            
-            const aspectRatio = 16/9; 
-            let width = containerWidth;
-            let height = containerWidth / aspectRatio;
-            
-            if (height > containerHeight) {
-                height = containerHeight;
-                width = containerHeight * aspectRatio;
-            }
-            
-            canvas.width = width * window.devicePixelRatio;
-            canvas.height = height * window.devicePixelRatio;
-            canvas.style.width = `${width}px`;
-            canvas.style.height = `${height}px`;
-
-            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
-            setCanvasStyles(); 
-            redrawCanvas(); 
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
         }
 
-        // --- Drawing History (Undo/Redo) ---
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
 
-        function addDrawingToHistory(drawingData) {
-            if (historyIndex < drawingHistory.length - 1) {
-                drawingHistory = drawingHistory.slice(0, historyIndex + 1);
-            }
-            drawingHistory.push(drawingData);
-            historyIndex++;
-            // console.log('Added to history:', drawingData, 'New history size:', drawingHistory.length);
-        }
-
-        function redrawCanvas() {
-            ctx.clearRect(0, 0, canvas.width / window.devicePixelRatio, canvas.height / window.devicePixelRatio);
-            
-            drawingHistory.forEach(data => {
-                applyDrawing(data);
-            });
-            toggleTool(currentTool, false); 
-        }
-
-        function undo() {
-            if (historyIndex > -1) {
-                historyIndex--;
-                redrawCanvas();
-                sendStatusMessage('Undo completed', 'info');
-            } else {
-                sendStatusMessage('Nothing to undo', 'warning');
-            }
-        }
-
-        function redo() {
-            if (historyIndex < drawingHistory.length - 1) {
-                historyIndex++;
-                redrawCanvas();
-                sendStatusMessage('Redo completed', 'info');
-            } else {
-                sendStatusMessage('Nothing to redo', 'warning');
-            }
-        }
-
-        // --- Tool Management ---
-
-        function toggleTool(tool, updateButtonState = true) {
-            currentTool = tool;
-            hideTextInput(); 
-
-            if (updateButtonState) {
-                [penBtn, eraserBtn, lineBtn, rectangleBtn, circleBtn, textBtn].forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                const selectedBtn = document.getElementById(`${tool}Btn`);
-                if (selectedBtn) {
-                    selectedBtn.classList.add('active');
-                }
-            }
-
-            // Reset drawing context for each tool
-            ctx.globalCompositeOperation = 'source-over'; 
-            ctx.strokeStyle = currentColor;
-            ctx.fillStyle = currentColor; 
-            ctx.lineWidth = currentLineWidth;
-
-            // Apply tool-specific settings
-            switch (tool) {
-                case 'eraser':
-                    ctx.globalCompositeOperation = 'destination-out';
-                    ctx.lineWidth = currentLineWidth * 2; 
-                    break;
-                case 'text':
-                    // Text tool specific logic for input handling (handled in mousedown)
-                    break;
-            }
-        }
-
-        // --- Coordinate Handling ---
-
-        function getCoordinates(e) {
-            const rect = canvas.getBoundingClientRect();
-            let clientX, clientY;
-
-            if (e.touches && e.touches.length > 0) {
-                clientX = e.touches[0].clientX;
-                clientY = e.touches[0].clientY;
-            } else {
-                clientX = e.clientX;
-                clientY = e.clientY;
-            }
-            return {
-                x: (clientX - rect.left) * (canvas.width / rect.width),
-                y: (clientY - rect.top) * (canvas.height / rect.height)
-            };
-        }
-
-        // --- Drawing Logic (Mouse/Touch Events) ---
-
+        // Drawing functions
         function startDrawing(e) {
-            e.preventDefault();
-            hideTextInput(); 
-
-            startPoint = getCoordinates(e);
-            lastPoint = { ...startPoint }; 
-
-            if (currentTool === 'text') {
-                showTextInput(startPoint.x, startPoint.y);
-                isDrawing = false; 
-                return;
-            }
-
             isDrawing = true;
-            if (currentTool === 'pen' || currentTool === 'eraser') {
-                currentStroke = {
-                    tool: currentTool,
-                    color: currentColor,
-                    lineWidth: currentLineWidth,
-                    points: [{ x: startPoint.x, y: startPoint.y }]
-                };
-                applyDrawing(currentStroke); // Draw the first point
-            }
+            draw(e);
+        }
+
+        function stopDrawing() {
+            isDrawing = false;
+            ctx.beginPath();
         }
 
         function draw(e) {
-            e.preventDefault();
             if (!isDrawing) return;
-            const currentCoords = getCoordinates(e);
 
-            if (currentTool === 'pen' || currentTool === 'eraser') {
-                currentStroke.points.push({ x: currentCoords.x, y: currentCoords.y });
-                
-                ctx.beginPath();
-                ctx.moveTo(lastPoint.x, lastPoint.y);
-                ctx.lineTo(currentCoords.x, currentCoords.y);
-                ctx.globalCompositeOperation = (currentTool === 'eraser' ? 'destination-out' : 'source-over');
-                ctx.strokeStyle = (currentTool === 'eraser' ? canvas.style.background : currentColor); 
-                ctx.lineWidth = (currentTool === 'eraser' ? currentLineWidth * 2 : currentLineWidth);
-                ctx.stroke();
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
 
-                toggleTool(currentTool, false); 
-            } else if (['line', 'rectangle', 'circle'].includes(currentTool)) {
-                redrawCanvas(); 
-                applyTemporaryShape(startPoint, currentCoords, currentTool, currentColor, currentLineWidth);
-            }
-            lastPoint = currentCoords;
-        }
+            ctx.lineWidth = currentSize;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
 
-        function stopDrawing(e) {
-            e.preventDefault();
-            if (!isDrawing) return;
-            isDrawing = false;
-            const endPoint = getCoordinates(e);
-
-            if (currentTool === 'pen' || currentTool === 'eraser') {
-                addDrawingToHistory(currentStroke);
-                if (currentRoom) {
-                    socket.emit('draw', { roomId: currentRoom, data: currentStroke });
-                }
-                currentStroke = null; 
-            } else if (['line', 'rectangle', 'circle'].includes(currentTool)) {
-                const finalDrawingData = {
-                    x1: startPoint.x,
-                    y1: startPoint.y,
-                    x2: endPoint.x,
-                    y2: endPoint.y,
-                    tool: currentTool,
-                    color: currentColor,
-                    lineWidth: currentLineWidth
-                };
-                addDrawingToHistory(finalDrawingData);
-                redrawCanvas(); 
-                if (currentRoom) {
-                    socket.emit('draw', { roomId: currentRoom, data: finalDrawingData });
-                }
-            }
-        }
-        
-        // --- Drawing Application (for history and received data) ---
-        function applyDrawing(data) {
-            const originalCompositeOperation = ctx.globalCompositeOperation;
-            const originalLineWidth = ctx.lineWidth;
-            const originalStrokeStyle = ctx.strokeStyle;
-            const originalFillStyle = ctx.fillStyle;
-            const originalFont = ctx.font;
-
-            // Apply tool-specific settings
-            if (data.tool === 'eraser') {
+            if (currentTool === 'eraser') {
                 ctx.globalCompositeOperation = 'destination-out';
-                ctx.lineWidth = data.lineWidth * 2;
             } else {
                 ctx.globalCompositeOperation = 'source-over';
-                ctx.strokeStyle = data.color;
-                ctx.fillStyle = data.color;
-                ctx.lineWidth = data.lineWidth;
+                ctx.strokeStyle = currentColor;
             }
 
-            // Draw based on tool type
-            switch (data.tool) {
-                case 'pen':
-                case 'eraser':
-                    if (data.points && data.points.length > 1) {
-                        ctx.beginPath();
-                        ctx.moveTo(data.points[0].x, data.points[0].y);
-                        for (let i = 1; i < data.points.length; i++) {
-                            ctx.lineTo(data.points[i].x, data.points[i].y);
-                        }
-                        ctx.stroke();
-                    } else if (data.x1 !== undefined) { 
-                        ctx.beginPath();
-                        ctx.moveTo(data.x1, data.y1);
-                        ctx.lineTo(data.x2, data.y2);
-                        ctx.stroke();
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+
+            // Send drawing data to server
+            if (currentRoom) {
+                socket.emit('draw', {
+                    roomId: currentRoom,
+                    data: {
+                        x,
+                        y,
+                        tool: currentTool,
+                        color: currentColor,
+                        size: currentSize
                     }
-                    break;
-                case 'line':
-                    ctx.beginPath();
-                    ctx.moveTo(data.x1, data.y1);
-                    ctx.lineTo(data.x2, data.y2);
-                    ctx.stroke();
-                    break;
-                case 'rectangle':
-                    const rectX = Math.min(data.x1, data.x2);
-                    const rectY = Math.min(data.y1, data.y2);
-                    const rectWidth = Math.abs(data.x1 - data.x2);
-                    const rectHeight = Math.abs(data.y1 - data.y2);
-                    ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
-                    break;
-                case 'circle':
-                    const centerX = (data.x1 + data.x2) / 2;
-                    const centerY = (data.y1 + data.y2) / 2;
-                    const radius = Math.sqrt(Math.pow(data.x2 - data.x1, 2) + Math.pow(data.y2 - data.y1, 2)) / 2;
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-                    ctx.stroke();
-                    break;
-                case 'text':
-                    ctx.font = data.font || '16px Inter, sans-serif'; 
-                    ctx.fillStyle = data.fillStyle || '#000000'; 
-                    ctx.fillText(data.text, data.x, data.y);
-                    break;
+                });
             }
-
-            // Restore original context settings
-            ctx.globalCompositeOperation = originalCompositeOperation;
-            ctx.lineWidth = originalLineWidth;
-            ctx.strokeStyle = originalStrokeStyle;
-            ctx.fillStyle = originalFillStyle;
-            ctx.font = originalFont;
         }
 
-        // For shapes, we draw a temporary preview without adding to history
-        function applyTemporaryShape(start, end, tool, color, lineWidth) {
-            const originalCompositeOperation = ctx.globalCompositeOperation;
-            const originalLineWidth = ctx.lineWidth;
-            const originalStrokeStyle = ctx.strokeStyle;
-            const originalFillStyle = ctx.fillStyle;
-
-            ctx.globalCompositeOperation = 'source-over';
-            ctx.strokeStyle = color;
-            ctx.fillStyle = color;
-            ctx.lineWidth = lineWidth;
-
-            switch (tool) {
-                case 'line':
-                    ctx.beginPath();
-                    ctx.moveTo(start.x, start.y);
-                    ctx.lineTo(end.x, end.y);
-                    ctx.stroke();
-                    break;
-                case 'rectangle':
-                    const rectX = Math.min(start.x, end.x);
-                    const rectY = Math.min(start.y, end.y);
-                    const rectWidth = Math.abs(start.x - end.x);
-                    const rectHeight = Math.abs(start.y - end.y);
-                    ctx.strokeRect(rectX, rectY, rectWidth, rectHeight);
-                    break;
-                case 'circle':
-                    const centerX = (start.x + end.x) / 2;
-                    const centerY = (start.y + end.y) / 2;
-                    const radius = Math.sqrt(Math.pow(end.x - start.x, 2) + Math.pow(end.y - start.y, 2)) / 2;
-                    ctx.beginPath();
-                    ctx.arc(centerX, centerY, radius, 0, 2 * Math.PI);
-                    ctx.stroke();
-                    break;
-            }
-            // Restore original context settings
-            ctx.globalCompositeOperation = originalCompositeOperation;
-            ctx.lineWidth = originalLineWidth;
-            ctx.strokeStyle = originalStrokeStyle;
-            ctx.fillStyle = originalFillStyle;
+        // Tool functions
+        function setTool(tool) {
+            currentTool = tool;
+            document.querySelectorAll('.tool-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
         }
 
-        // --- Text Input Management ---
-        function showTextInput(x, y) {
-            textInput.style.display = 'block';
-            // Position the textarea relative to the canvas display size
-            const canvasRect = canvas.getBoundingClientRect();
-
-            // Scale back from canvas drawing coordinates (x,y) to CSS display coordinates for textarea positioning
-            const displayX = x / (canvas.width / canvasRect.width);
-            const displayY = y / (canvas.height / canvasRect.height);
-            
-            textInput.style.left = `${displayX}px`;
-            textInput.style.top = `${displayY}px`;
-
-            textInput.style.font = ctx.font;
-            textInput.style.color = currentColor;
-            textInput.style.width = 'auto'; 
-            textInput.style.height = 'auto'; 
-            textInput.value = '';
-            textInput.focus();
-
-            textInput.onblur = commitText;
-            textInput.onkeydown = (e) => {
-                if (e.key === 'Enter' && !e.shiftKey) { 
-                    e.preventDefault();
-                    commitText();
-                }
-            };
-
-            textInput.oninput = () => {
-                textInput.style.height = 'auto';
-                textInput.style.height = textInput.scrollHeight + 'px';
-                textInput.style.width = 'auto';
-                textInput.style.width = textInput.scrollWidth + 'px';
-            };
+        function setColor(color) {
+            currentColor = color;
         }
 
-        function hideTextInput() {
-            textInput.style.display = 'none';
-            textInput.onblur = null;
-            textInput.onkeydown = null;
-            textInput.oninput = null;
+        function setSize(size) {
+            currentSize = size;
         }
 
-        function commitText() {
-            const text = textInput.value.trim();
-            if (text) {
-                // Convert textarea's CSS position (relative to canvas display size) back to canvas drawing coordinates
-                const canvasX = parseFloat(textInput.style.left) * (canvas.width / parseFloat(canvas.style.width));
-                const canvasY = parseFloat(textInput.style.top) * (canvas.height / parseFloat(canvas.style.height));
-
-                const textData = {
-                    x: canvasX,
-                    y: canvasY,
-                    text: text,
-                    font: ctx.font, 
-                    fillStyle: currentColor, 
-                    tool: 'text'
-                };
-                applyDrawing(textData);
-                addDrawingToHistory(textData);
-                if (currentRoom) {
-                    socket.emit('draw', { roomId: currentRoom, data: textData });
-                }
-            }
-            hideTextInput();
-            toggleTool('pen'); 
-        }
-
-        // --- Event Listeners (Canvas, Tools, Sliders) ---
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing); 
-
-        canvas.addEventListener('touchstart', startDrawing, { passive: false });
-        canvas.addEventListener('touchmove', draw, { passive: false });
-        canvas.addEventListener('touchend', stopDrawing);
-
-        colorPicker.addEventListener('change', (e) => {
-            currentColor = e.target.value;
-            toggleTool(currentTool, false); 
-        });
-
-        lineWidthSlider.addEventListener('input', (e) => {
-            currentLineWidth = parseInt(e.target.value);
-            toggleTool(currentTool, false); 
-        });
-
-        // --- Socket Events ---
-        socket.on('connect', () => {
-            sendStatusMessage('Connected to server', 'success');
-            joinRoomBtn.disabled = false;
-        });
-
-        socket.on('connect_error', (error) => {
-            console.error('Socket connection error:', error);
-            sendStatusMessage(`Connection error: ${error.message}. Try refreshing.`, 'error');
-            joinRoomBtn.disabled = true;
-        });
-
-        socket.on('disconnect', () => {
-            sendStatusMessage('Disconnected from server', 'error');
-            joinRoomBtn.disabled = false;
-        });
-
-        socket.on('draw', (data) => {
-            applyDrawing(data);
-            addDrawingToHistory(data); 
-        });
-
-        socket.on('userJoined', ({ users }) => {
-            displayMessage('System', `${users.length} user(s) in room`, 'system');
-            redrawCanvas();
-        });
-
-        socket.on('chatMessage', ({ username, message }) => {
-            displayMessage(username, message, username === document.getElementById('username').value ? 'user' : 'ai');
-        });
-
-        // --- Room Management ---
+        // Room functions
         function joinRoom() {
             const username = document.getElementById('username').value.trim();
             const roomId = document.getElementById('roomId').value.trim();
-            if (username && roomId) {
-                currentRoom = roomId;
-                socket.emit('joinRoom', { roomId, username });
-                sendStatusMessage(`Joined room: ${roomId} as ${username}`, 'success');
-                drawingHistory = []; 
-                historyIndex = -1;
-                redrawCanvas();
-            } else {
-                sendStatusMessage('Please enter a username and room ID.', 'warning');
+
+            if (!username || !roomId) {
+                alert('Please enter both username and room ID');
+                return;
             }
+
+            currentUsername = username;
+            currentRoom = roomId;
+
+            socket.emit('joinRoom', { roomId, username });
+            addSystemMessage(`Joined room: ${roomId}`);
         }
 
-        // --- Chat Functions ---
+        // Chat functions
         function sendMessage() {
-            const message = chatInput.value.trim();
-            if (message && currentRoom) {
-                socket.emit('sendMessage', { roomId: currentRoom, message });
-                chatInput.value = '';
-            } else if (!currentRoom) {
-                sendStatusMessage('Please join a room to chat.', 'warning');
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+
+            if (message && currentRoom && currentUsername) {
+                socket.emit('chatMessage', {
+                    roomId: currentRoom,
+                    message,
+                    username: currentUsername
+                });
+                messageInput.value = '';
             }
         }
 
-        // --- Utility Functions ---
-        function sendStatusMessage(message, type = 'info') {
-            statusDiv.textContent = message;
-            statusDiv.className = `status ${type}`;
-        }
+        function addMessage(message, type = 'other') {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message', type);
+            
+            if (type === 'system') {
+                messageElement.textContent = message;
+            } else {
+                messageElement.innerHTML = `
+                    <strong>${message.username}</strong>
+                    <p>${message.message}</p>
+                `;
+            }
 
-        // --- Initial Setup ---
-        // Ensure default values are set in inputs
-        document.getElementById('username').value = 'Guest';
-        document.getElementById('roomId').value = 'sketch_room';
-
-        resizeCanvas(); 
-        // window.addEventListener('resize', resizeCanvas); // Already added inside resizeCanvas itself
-        toggleTool(currentTool); 
-        setCanvasStyles(); 
-
-        // Modified message display function
-        function displayMessage(username, message, type = 'user') {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}`;
-            
-            const header = document.createElement('div');
-            header.className = 'message-header';
-            header.textContent = username;
-            
-            const content = document.createElement('div');
-            content.className = 'message-content';
-            content.textContent = message;
-            
-            messageDiv.appendChild(header);
-            messageDiv.appendChild(content);
-            
-            chatMessages.appendChild(messageDiv);
+            chatMessages.appendChild(messageElement);
             chatMessages.scrollTop = chatMessages.scrollHeight;
         }
+
+        function addSystemMessage(message) {
+            addMessage(message, 'system');
+        }
+
+        // Event listeners
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        document.getElementById('colorPicker').addEventListener('change', (e) => setColor(e.target.value));
+        document.getElementById('sizeSlider').addEventListener('input', (e) => setSize(e.target.value));
+        document.getElementById('messageInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+
+        // Socket event handlers
+        socket.on('draw', (data) => {
+            const { x, y, tool, color, size } = data;
+            
+            ctx.lineWidth = size;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            if (tool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = color;
+            }
+
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        });
+
+        socket.on('userJoined', ({ id, username }) => {
+            addSystemMessage(`${username} joined the room`);
+        });
+
+        socket.on('userLeft', ({ id, username }) => {
+            addSystemMessage(`${username} left the room`);
+        });
+
+        socket.on('chatMessage', (message) => {
+            addMessage(message, message.id === socket.id ? 'user' : 'other');
+        });
+
+        socket.on('connect_error', (error) => {
+            console.error('Connection error:', error);
+            addSystemMessage('Connection error. Please try again.');
+        });
     </script>
 </body>
 </html> 
