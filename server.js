@@ -32,45 +32,62 @@ io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
   // Handle room joining
-  socket.on('joinRoom', (roomId) => {
-    console.log(`Client ${socket.id} joining room ${roomId}`);
+  socket.on('joinRoom', ({ roomId, username }) => {
+    console.log(`Client ${socket.id} joining room ${roomId} as ${username}`);
     socket.join(roomId);
     
     // Initialize room if it doesn't exist
     if (!rooms.has(roomId)) {
       rooms.set(roomId, {
-        users: new Set(),
+        users: new Map(),
         permissions: new Map()
       });
     }
     
     // Add user to room
     const room = rooms.get(roomId);
-    room.users.add(socket.id);
-    room.permissions.set(socket.id, 'edit'); // Default permission
+    room.users.set(socket.id, username);
     
-    // Notify others in the room
-    socket.to(roomId).emit('userJoined', socket.id);
+    // First user in room becomes host
+    const isHost = room.users.size === 1;
+    room.permissions.set(socket.id, isHost);
+    
+    // Notify the user about their host status
+    socket.emit('hostStatus', isHost);
+    
+    // Notify everyone in the room about the updated user list
+    io.to(roomId).emit('userJoined', {
+      users: Array.from(room.users.entries()),
+      permissions: Array.from(room.permissions.entries())
+    });
   });
 
   // Handle drawing events
   socket.on('draw', (data) => {
-    const { roomId, shape } = data;
+    const { roomId, data: shape } = data;
     const room = rooms.get(roomId);
     
-    if (room && room.permissions.get(socket.id) === 'edit') {
+    if (room && room.permissions.get(socket.id)) {
       socket.to(roomId).emit('draw', shape);
     }
   });
 
-  // Handle permission changes
-  socket.on('updatePermission', (data) => {
-    const { roomId, userId, permission } = data;
+  // Handle permission requests
+  socket.on('requestPermission', ({ roomId }) => {
     const room = rooms.get(roomId);
-    
-    if (room && room.permissions.has(userId)) {
-      room.permissions.set(userId, permission);
-      io.to(roomId).emit('permissionUpdated', { userId, permission });
+    if (room) {
+      const username = room.users.get(socket.id);
+      // Notify all users in the room about the permission request
+      io.to(roomId).emit('permissionRequest', { userId: socket.id, username });
+    }
+  });
+
+  // Handle permission grants
+  socket.on('grantPermission', ({ roomId, userId }) => {
+    const room = rooms.get(roomId);
+    if (room && room.permissions.get(socket.id)) { // Only host can grant permissions
+      room.permissions.set(userId, true);
+      io.to(roomId).emit('permissionUpdate', { userId, granted: true });
     }
   });
 
@@ -84,8 +101,18 @@ io.on('connection', (socket) => {
         room.users.delete(socket.id);
         room.permissions.delete(socket.id);
         
-        // Notify others in the room
-        socket.to(roomId).emit('userLeft', socket.id);
+        // If host left, assign new host
+        if (room.users.size > 0 && !Array.from(room.permissions.values()).some(p => p)) {
+          const newHostId = room.users.keys().next().value;
+          room.permissions.set(newHostId, true);
+          io.to(newHostId).emit('hostStatus', true);
+        }
+        
+        // Notify others in the room about the updated user list
+        io.to(roomId).emit('userJoined', {
+          users: Array.from(room.users.entries()),
+          permissions: Array.from(room.permissions.entries())
+        });
         
         // Clean up empty rooms
         if (room.users.size === 0) {
