@@ -3,6 +3,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const path = require('path');
 const cors = require('cors');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -19,12 +20,29 @@ app.use(cors());
 // Serve static files from the React app
 const clientBuildPath = path.join(__dirname, 'client-build');
 console.log('Client build path:', clientBuildPath);
+
+// Check if build directory exists
+if (!fs.existsSync(clientBuildPath)) {
+  console.error('Build directory not found at:', clientBuildPath);
+  console.log('Current directory:', __dirname);
+  console.log('Directory contents:', fs.readdirSync(__dirname));
+  process.exit(1);
+}
+
 app.use(express.static(clientBuildPath));
 
 // Handle React routing, return all requests to React app
 app.get('*', (req, res) => {
   const indexPath = path.join(clientBuildPath, 'index.html');
   console.log('Serving index.html from:', indexPath);
+  
+  if (!fs.existsSync(indexPath)) {
+    console.error('index.html not found at:', indexPath);
+    console.log('Build directory contents:', fs.readdirSync(clientBuildPath));
+    res.status(500).send('Build files not found. Please check server logs.');
+    return;
+  }
+  
   res.sendFile(indexPath);
 });
 
@@ -134,4 +152,5 @@ server.listen(PORT, HOST, () => {
   console.log(`Server running at http://${HOST}:${PORT}`);
   console.log('Current directory:', __dirname);
   console.log('Client build path:', clientBuildPath);
+  console.log('Directory contents:', fs.readdirSync(__dirname));
 }); 

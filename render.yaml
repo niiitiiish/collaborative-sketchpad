@@ -11,9 +11,13 @@ services:
       echo "Building client..."
       CI=false npm run build
       echo "Moving build files..."
-      mv build ../client-build
+      cp -r build ../client-build
       cd ..
       echo "Build process completed"
+      echo "Listing files in root:"
+      ls -la
+      echo "Listing client-build:"
+      ls -la client-build
     startCommand: |
       echo "Starting server..."
       echo "Current directory: $(pwd)"
