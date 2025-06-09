@@ -60,6 +60,10 @@ io.on('connection', (socket) => {
     socket.to(roomId).emit('draw', data);
   });
 
+  socket.on('undo', ({ roomId }) => {
+    socket.to(roomId).emit('undo');
+  });
+
   socket.on('chatMessage', ({ roomId, message, username }) => {
     io.to(roomId).emit('chatMessage', {
       id: socket.id,

@@ -15,8 +15,14 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
       setLines((prevLines) => [...prevLines, data]);
     });
 
+    socket.on('undo', () => {
+      console.log('Received undo event');
+      setLines((prevLines) => prevLines.slice(0, -1));
+    });
+
     return () => {
       socket.off('draw');
+      socket.off('undo');
     };
   }, [socket]);
 
@@ -67,17 +73,36 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
     socket.emit('requestPermission', { roomId });
   };
 
+  const handleUndo = () => {
+    if (!hasPermission) return;
+    
+    setLines((prevLines) => {
+      if (prevLines.length === 0) return prevLines;
+      const newLines = prevLines.slice(0, -1);
+      // Emit undo event to other users
+      socket.emit('undo', { roomId });
+      return newLines;
+    });
+  };
+
   return (
     <Box sx={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column' }}>
       <Box sx={{ p: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Typography variant="h6">
           {isHost ? 'Host Mode' : hasPermission ? 'Drawing Enabled' : 'Drawing Disabled'}
         </Typography>
-        {!hasPermission && !isHost && (
-          <Button variant="contained" onClick={handleRequestPermission}>
-            Request Drawing Permission
-          </Button>
-        )}
+        <Box sx={{ display: 'flex', gap: 2 }}>
+          {hasPermission && (
+            <Button variant="contained" onClick={handleUndo} disabled={lines.length === 0}>
+              Undo
+            </Button>
+          )}
+          {!hasPermission && !isHost && (
+            <Button variant="contained" onClick={handleRequestPermission}>
+              Request Drawing Permission
+            </Button>
+          )}
+        </Box>
       </Box>
       <Box sx={{ flex: 1, border: '1px solid #ccc' }}>
         <Stage
