@@ -5,7 +5,7 @@ import SketchPad from './components/SketchPad';
 
 // Connect to the appropriate server URL based on environment
 const SOCKET_URL = process.env.NODE_ENV === 'production'
-  ? window.location.origin  // In production, use the deployed URL
+  ? 'https://sketch-collab.onrender.com'  // Use the exact production URL
   : `http://${window.location.hostname}:5000`;  // In development, use local server
 
 console.log('Environment:', process.env.NODE_ENV);
@@ -18,7 +18,7 @@ const socket = io(SOCKET_URL, {
   reconnectionAttempts: 5,
   reconnectionDelay: 1000,
   path: '/socket.io/',
-  secure: process.env.NODE_ENV === 'production',
+  secure: true,
   rejectUnauthorized: false
 });
 
