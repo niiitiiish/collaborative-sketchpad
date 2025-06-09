@@ -745,9 +745,13 @@
         function commitText() {
             const text = textInput.value.trim();
             if (text) {
+                // Convert textarea's CSS position (relative to canvas display size) back to canvas drawing coordinates
+                const canvasX = parseFloat(textInput.style.left) * (canvas.width / canvas.style.width.replace('px',''));
+                const canvasY = parseFloat(textInput.style.top) * (canvas.height / canvas.style.height.replace('px',''));
+
                 const textData = {
-                    x: parseFloat(textInput.style.left) * (canvas.width / canvas.style.width.replace('px','')),
-                    y: parseFloat(textInput.style.top) * (canvas.height / canvas.style.height.replace('px','')),
+                    x: canvasX,
+                    y: canvasY,
                     text: text,
                     font: ctx.font, // Current canvas font
                     fillStyle: currentColor, // Current color
