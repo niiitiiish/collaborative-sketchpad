@@ -251,6 +251,8 @@
             <button class="tool-btn" onclick="setTool('eraser')" title="Eraser">🧹</button>
             <input type="color" class="color-picker" id="colorPicker" value="#000000" title="Color">
             <input type="range" class="size-slider" id="sizeSlider" min="1" max="50" value="5" title="Size">
+            <button class="tool-btn" onclick="undo()" title="Undo">↩️</button>
+            <button class="tool-btn" onclick="redo()" title="Redo">↪️</button>
         </div>
         <div class="chat-container">
             <div class="chat-messages" id="chatMessages"></div>
@@ -271,34 +273,87 @@
         let currentSize = 5;
         let currentRoom = null;
         let currentUsername = null;
+        let drawingHistory = [];
+        let historyIndex = -1;
+        let currentStroke = null; // To group pen/eraser strokes
 
         // Set canvas size
         function resizeCanvas() {
             const container = canvas.parentElement;
             canvas.width = container.clientWidth;
             canvas.height = container.clientHeight;
+            redrawCanvas(); // Redraw canvas on resize to maintain content
         }
 
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
+        // Drawing history functions
+        function addDrawingToHistory(drawingData) {
+            if (historyIndex < drawingHistory.length - 1) {
+                drawingHistory = drawingHistory.slice(0, historyIndex + 1);
+            }
+            drawingHistory.push(drawingData);
+            historyIndex++;
+        }
+
+        function redrawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear entire canvas
+            for (let i = 0; i <= historyIndex; i++) {
+                applyDrawing(drawingHistory[i]);
+            }
+        }
+
+        function undo() {
+            if (historyIndex > -1) {
+                historyIndex--;
+                redrawCanvas();
+            }
+        }
+
+        function redo() {
+            if (historyIndex < drawingHistory.length - 1) {
+                historyIndex++;
+                redrawCanvas();
+            }
+        }
+
         // Drawing functions
         function startDrawing(e) {
             isDrawing = true;
-            draw(e);
+            const { x, y } = getCoordinates(e);
+            currentStroke = {
+                tool: currentTool,
+                color: currentColor,
+                size: currentSize,
+                points: [{ x, y }]
+            };
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+            draw(e); // Draw the first point
         }
 
         function stopDrawing() {
+            if (!isDrawing) return;
             isDrawing = false;
-            ctx.beginPath();
+            ctx.beginPath(); // End the current path
+            if (currentStroke) {
+                addDrawingToHistory(currentStroke);
+                // Send drawing data to server
+                if (currentRoom) {
+                    socket.emit('draw', {
+                        roomId: currentRoom,
+                        data: currentStroke
+                    });
+                }
+                currentStroke = null;
+            }
         }
 
         function draw(e) {
             if (!isDrawing) return;
 
-            const rect = canvas.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
+            const { x, y } = getCoordinates(e);
 
             ctx.lineWidth = currentSize;
             ctx.lineCap = 'round';
@@ -316,19 +371,57 @@
             ctx.beginPath();
             ctx.moveTo(x, y);
 
-            // Send drawing data to server
-            if (currentRoom) {
-                socket.emit('draw', {
-                    roomId: currentRoom,
-                    data: {
-                        x,
-                        y,
-                        tool: currentTool,
-                        color: currentColor,
-                        size: currentSize
-                    }
-                });
+            if (currentStroke) {
+                currentStroke.points.push({ x, y });
             }
+        }
+
+        function applyDrawing(data) {
+            const originalCompositeOperation = ctx.globalCompositeOperation;
+            const originalLineWidth = ctx.lineWidth;
+            const originalStrokeStyle = ctx.strokeStyle;
+
+            ctx.lineWidth = data.size;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            if (data.tool === 'eraser') {
+                ctx.globalCompositeOperation = 'destination-out';
+            } else {
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.strokeStyle = data.color;
+            }
+
+            if (data.points && data.points.length > 0) {
+                ctx.beginPath();
+                ctx.moveTo(data.points[0].x, data.points[0].y);
+                for (let i = 1; i < data.points.length; i++) {
+                    ctx.lineTo(data.points[i].x, data.points[i].y);
+                }
+                ctx.stroke();
+            }
+
+            // Restore original context settings
+            ctx.globalCompositeOperation = originalCompositeOperation;
+            ctx.lineWidth = originalLineWidth;
+            ctx.strokeStyle = originalStrokeStyle;
+        }
+
+        function getCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            let clientX, clientY;
+
+            if (e.touches && e.touches.length > 0) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
         }
 
         // Tool functions
@@ -408,6 +501,11 @@
         canvas.addEventListener('mouseup', stopDrawing);
         canvas.addEventListener('mouseout', stopDrawing);
 
+        // Touch event listeners for drawing
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing);
+
         document.getElementById('colorPicker').addEventListener('change', (e) => setColor(e.target.value));
         document.getElementById('sizeSlider').addEventListener('input', (e) => setSize(e.target.value));
         document.getElementById('messageInput').addEventListener('keypress', (e) => {
@@ -418,23 +516,8 @@
 
         // Socket event handlers
         socket.on('draw', (data) => {
-            const { x, y, tool, color, size } = data;
-            
-            ctx.lineWidth = size;
-            ctx.lineCap = 'round';
-            ctx.lineJoin = 'round';
-
-            if (tool === 'eraser') {
-                ctx.globalCompositeOperation = 'destination-out';
-            } else {
-                ctx.globalCompositeOperation = 'source-over';
-                ctx.strokeStyle = color;
-            }
-
-            ctx.lineTo(x, y);
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, y);
+            addDrawingToHistory(data);
+            redrawCanvas(); // Redraw canvas to apply new drawing
         });
 
         socket.on('userJoined', ({ id, username }) => {
