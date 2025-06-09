@@ -5,17 +5,20 @@ import SketchPad from './components/SketchPad';
 
 // Connect to the appropriate server URL based on environment
 const SOCKET_URL = process.env.NODE_ENV === 'production'
-  ? window.location.origin  // In production, use the same origin
-  : `http://${window.location.hostname}:5000`;  // In development, use the local server
+  ? window.location.origin  // In production, use the deployed URL
+  : `http://${window.location.hostname}:5000`;  // In development, use local server
 
 console.log('Environment:', process.env.NODE_ENV);
+console.log('Current URL:', window.location.origin);
 console.log('Connecting to socket server at:', SOCKET_URL);
 
 const socket = io(SOCKET_URL, {
   transports: ['websocket', 'polling'],
   reconnection: true,
   reconnectionAttempts: 5,
-  reconnectionDelay: 1000
+  reconnectionDelay: 1000,
+  path: '/socket.io/',
+  secure: process.env.NODE_ENV === 'production'
 });
 
 // Add connection status logging

@@ -18,7 +18,8 @@ const io = socketIo(server, {
   },
   transports: ['websocket', 'polling'],
   pingTimeout: 60000,
-  pingInterval: 25000
+  pingInterval: 25000,
+  path: '/socket.io/'
 });
 
 app.use(cors());
@@ -27,6 +28,8 @@ app.use(express.json());
 // Serve static files from the React app
 const buildPath = path.join(__dirname, 'client/build');
 console.log('Build path:', buildPath);
+console.log('Environment:', process.env.NODE_ENV);
+console.log('Server URL:', process.env.NODE_ENV === 'production' ? 'Production' : 'Development');
 
 // Check if build directory exists
 if (fs.existsSync(buildPath)) {
