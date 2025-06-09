@@ -76,10 +76,10 @@ io.on('connection', (socket) => {
       const history = roomDrawingHistory.get(roomId);
       if (history.length > 0) {
         history.pop();
+        // Broadcast undo event to ALL users in the room, including the sender
+        io.in(roomId).emit('undo');
       }
     }
-    // Broadcast undo event to all users in the room
-    io.to(roomId).emit('undo');
   });
 
   socket.on('chatMessage', ({ roomId, message, username }) => {

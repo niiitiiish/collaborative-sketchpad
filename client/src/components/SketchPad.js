@@ -20,22 +20,26 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
       console.log('Received undo event');
       setLines((prevLines) => {
         if (prevLines.length === 0) return prevLines;
-        return prevLines.slice(0, -1);
+        const newLines = prevLines.slice(0, -1);
+        console.log('Undoing last line, new lines count:', newLines.length);
+        return newLines;
       });
+    });
+
+    socket.on('drawingHistory', (history) => {
+      console.log('Received drawing history:', history);
+      setLines(history);
     });
 
     return () => {
       socket.off('draw');
       socket.off('undo');
+      socket.off('drawingHistory');
     };
   }, [socket]);
 
   const handleMouseDown = (e) => {
-    console.log('Mouse down - Permission:', hasPermission, 'Is Host:', isHost);
-    if (!hasPermission) {
-      console.log('No permission to draw');
-      return;
-    }
+    if (!hasPermission) return;
     setIsDrawing(true);
     const pos = e.target.getStage().getPointerPosition();
     const newLine = { points: [pos.x, pos.y] };
@@ -44,15 +48,11 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
   };
 
   const handleMouseMove = (e) => {
-    if (!isDrawing || !hasPermission) {
-      console.log('Cannot draw - Drawing:', isDrawing, 'Permission:', hasPermission);
-      return;
-    }
+    if (!isDrawing || !hasPermission) return;
     const stage = e.target.getStage();
     const point = stage.getPointerPosition();
     const lastLine = lines[lines.length - 1];
     
-    // Create a new line object to ensure state update
     const updatedLine = {
       ...lastLine,
       points: [...lastLine.points, point.x, point.y]
@@ -61,8 +61,6 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
     lastLineRef.current = updatedLine;
     setLines((prevLines) => [...prevLines.slice(0, -1), updatedLine]);
 
-    // Emit drawing data to other users
-    console.log('Emitting draw data:', updatedLine);
     socket.emit('draw', {
       roomId,
       data: updatedLine
@@ -70,26 +68,24 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
   };
 
   const handleMouseUp = () => {
-    console.log('Mouse up - Stopping drawing');
     setIsDrawing(false);
     lastLineRef.current = null;
   };
 
-  const handleRequestPermission = () => {
-    console.log('Requesting permission to draw');
-    socket.emit('requestPermission', { roomId });
-  };
-
   const handleUndo = () => {
-    if (!hasPermission) return;
+    if (!hasPermission || lines.length === 0) return;
     
+    console.log('Undoing last line, current lines count:', lines.length);
     setLines((prevLines) => {
-      if (prevLines.length === 0) return prevLines;
       const newLines = prevLines.slice(0, -1);
-      // Emit undo event to other users
+      console.log('New lines count after undo:', newLines.length);
       socket.emit('undo', { roomId });
       return newLines;
     });
+  };
+
+  const handleRequestPermission = () => {
+    socket.emit('requestPermission', { roomId });
   };
 
   return (
@@ -105,7 +101,7 @@ const SketchPad = ({ socket, roomId, hasPermission, isHost }) => {
               onClick={handleUndo} 
               disabled={lines.length === 0}
             >
-              Undo
+              Undo ({lines.length})
             </Button>
           )}
           {!hasPermission && !isHost && (
