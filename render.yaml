@@ -12,8 +12,9 @@ services:
       
       echo "Building client..."
       cd client
+      rm -rf node_modules
+      rm -f package-lock.json
       npm install
-      npm install react-scripts
       echo "Running build command..."
       CI=false GENERATE_SOURCEMAP=false npm run build
       
