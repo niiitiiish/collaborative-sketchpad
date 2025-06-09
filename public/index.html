@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Super Sketchpad</title>
+    <title>AI Sketchpad Chat</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
         /* CSS Variables for Theming */
@@ -25,6 +25,10 @@
             --glass-blur: 10px;
             --glass-bg-light: rgba(255, 255, 255, 0.15);
             --glass-bg-dark: rgba(0, 0, 0, 0.25);
+            --message-bg-user: #e3f2fd;
+            --message-bg-ai: #f5f5f5;
+            --message-bg-user-dark: #1a365d;
+            --message-bg-ai-dark: #2d3748;
         }
 
         /* Global Styles & Resets */
@@ -45,188 +49,188 @@
             transition: background 0.5s ease, color 0.3s ease;
         }
 
-        /* Header/Top Toolbar */
-        .header {
+        /* Chat Header */
+        .chat-header {
             padding: 15px 25px;
             background: var(--surface-light);
             box-shadow: var(--shadow-light);
             display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
             align-items: center;
             justify-content: space-between;
             z-index: 1000;
-            transition: background 0.3s ease, box-shadow 0.3s ease;
+            border-bottom: 1px solid var(--border-color-light);
         }
 
-        .header-title {
-            font-size: 1.8em;
+        .chat-header-title {
+            font-size: 1.5em;
             font-weight: 700;
             color: var(--primary-color);
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-        }
-
-        .control-group {
             display: flex;
+            align-items: center;
             gap: 10px;
-            align-items: center;
-            flex-wrap: wrap;
         }
 
-        .control-group label {
-            font-size: 0.95em;
-            color: var(--text-color-light);
-            white-space: nowrap;
+        .chat-header-title::before {
+            content: "🤖";
+            font-size: 1.2em;
         }
 
-        /* Inputs */
-        input[type="text"], input[type="number"], input[type="color"], select, textarea {
-            padding: 10px 15px;
-            font-size: 1em;
-            border: 1px solid var(--border-color-light);
-            border-radius: 8px;
-            background: var(--surface-light);
-            color: var(--text-color-light);
-            transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease, box-shadow 0.2s ease;
-            outline: none;
-        }
-
-        input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
-            border-color: var(--primary-color);
-            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.25);
-        }
-
-        input[type="color"] {
-            width: 45px;
-            height: 45px;
-            padding: 3px;
-            cursor: pointer;
-            border-radius: 8px;
-        }
-
-        /* Range Slider */
-        input[type="range"] {
-            -webkit-appearance: none;
-            width: 100px;
-            height: 10px;
-            background: var(--border-color-light);
-            border-radius: 5px;
-            outline: none;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 22px;
-            height: 22px;
-            border-radius: 50%;
-            background: var(--primary-color);
-            cursor: grab;
-            border: 3px solid var(--surface-light);
-            box-shadow: var(--shadow-light);
-            transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.1s ease, border-color 0.3s ease;
-        }
-        input[type="range"]::-webkit-slider-thumb:active {
-            cursor: grabbing;
-            transform: scale(1.1);
-            box-shadow: 0 0 0 5px rgba(0, 188, 212, 0.35);
-        }
-
-        /* Buttons */
-        button {
-            padding: 10px 20px;
-            font-size: 1em;
-            background: var(--primary-color);
-            color: white;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: background 0.3s ease, box-shadow 0.3s ease, transform 0.2s ease;
-            min-width: 80px;
+        .room-info {
             display: flex;
+            gap: 15px;
             align-items: center;
-            justify-content: center;
-            gap: 8px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
         }
 
-        button:hover {
-            background: var(--primary-hover-color);
-            transform: translateY(-2px);
-            box-shadow: 0 7px 15px rgba(0, 0, 0, 0.2);
-        }
-
-        button:active {
-            transform: translateY(0);
-            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
-        }
-
-        button.active {
-            background: var(--secondary-color);
-            box-shadow: inset 0 2px 5px rgba(0,0,0,0.3);
-            transform: translateY(0);
-        }
-
-        /* Status Message */
-        .status {
-            padding: 10px 20px;
-            border-radius: 8px;
-            font-size: 0.9em;
-            flex-grow: 1;
-            text-align: center;
-            min-width: 200px;
-            font-weight: 500;
-            transition: background 0.3s ease, color 0.3s ease;
-            background: var(--status-bg-info);
-            color: var(--status-text-info);
-        }
-
-        .status.success {
-            background: var(--status-bg-success);
-            color: var(--status-text-success);
-        }
-        .status.error {
-            background: var(--status-bg-error);
-            color: var(--status-text-error);
-        }
-        .status.warning {
-            background: #fff3cd; /* Yellow-100 */
-            color: #856404; /* Yellow-800 */
-        }
-
-        /* Main Content Layout */
-        .main-content {
+        /* Main Chat Area */
+        .chat-container {
+            flex: 1;
             display: flex;
-            flex-grow: 1;
             overflow: hidden;
         }
 
-        /* Sidebar Styles (Left - Tools) */
-        .sidebar.left {
-            width: 250px;
-            background: var(--surface-light);
+        .chat-messages {
+            flex: 1;
             padding: 20px;
-            box-shadow: var(--shadow-light);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 12px 16px;
+            border-radius: 15px;
+            position: relative;
+            animation: messageAppear 0.3s ease;
+        }
+
+        @keyframes messageAppear {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .message.user {
+            align-self: flex-end;
+            background: var(--message-bg-user);
+            border-bottom-right-radius: 5px;
+        }
+
+        .message.ai {
+            align-self: flex-start;
+            background: var(--message-bg-ai);
+            border-bottom-left-radius: 5px;
+        }
+
+        .message.system {
+            align-self: center;
+            background: var(--surface-light);
+            border: 1px solid var(--border-color-light);
+            font-size: 0.9em;
+            color: var(--text-color-light);
+            opacity: 0.8;
+        }
+
+        .message-header {
+            font-size: 0.8em;
+            margin-bottom: 5px;
+            opacity: 0.7;
+        }
+
+        .message-content {
+            word-break: break-word;
+        }
+
+        /* Input Area */
+        .chat-input-area {
+            padding: 15px;
+            background: var(--surface-light);
+            border-top: 1px solid var(--border-color-light);
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chat-input-wrapper {
+            flex: 1;
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            padding: 12px 20px;
+            padding-right: 50px;
+            border: 1px solid var(--border-color-light);
+            border-radius: 25px;
+            font-size: 1em;
+            background: var(--surface-light);
+            color: var(--text-color-light);
+            transition: all 0.3s ease;
+        }
+
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(0, 188, 212, 0.1);
+        }
+
+        .send-button {
+            position: absolute;
+            right: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .send-button:hover {
+            background: var(--primary-hover-color);
+            transform: translateY(-50%) scale(1.05);
+        }
+
+        .send-button:active {
+            transform: translateY(-50%) scale(0.95);
+        }
+
+        /* Tools Panel */
+        .tools-panel {
+            width: 300px;
+            background: var(--surface-light);
+            border-left: 1px solid var(--border-color-light);
+            padding: 20px;
             display: flex;
             flex-direction: column;
             gap: 20px;
             overflow-y: auto;
-            transition: background 0.3s ease, box-shadow 0.3s ease;
-            border-right: 1px solid var(--border-color-light);
         }
 
-        .sidebar-section h3 {
+        .tools-section {
+            background: var(--surface-light);
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: var(--shadow-light);
+        }
+
+        .tools-section h3 {
             color: var(--primary-color);
             margin-bottom: 15px;
-            font-size: 1.2em;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            border-bottom: 2px solid var(--border-color-light);
-            padding-bottom: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
         }
 
         .tool-grid {
@@ -235,69 +239,50 @@
             gap: 10px;
         }
 
-        .tool-grid button {
-            min-width: unset;
-            width: 100%;
-        }
-
-        /* Right Sidebar (Chat & Users) */
-        .sidebar.right {
-            width: 300px;
+        .tool-button {
+            padding: 10px;
+            border: 1px solid var(--border-color-light);
+            border-radius: 8px;
             background: var(--surface-light);
-            padding: 20px;
-            box-shadow: var(--shadow-light);
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            overflow-y: auto;
-            transition: background 0.3s ease, box-shadow 0.3s ease;
-            border-left: 1px solid var(--border-color-light);
-        }
-
-        .user-list ul,
-        .chat-messages ul {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .user-list li,
-        .chat-messages li {
-            padding: 8px 0;
-            border-bottom: 1px dashed var(--border-color-light);
-            font-size: 0.9em;
             color: var(--text-color-light);
-        }
-
-        .chat-input-group {
+            cursor: pointer;
+            transition: all 0.3s ease;
             display: flex;
-            gap: 10px;
-            margin-top: 15px;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
         }
 
-        .chat-input-group input {
-            flex-grow: 1;
+        .tool-button:hover {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
+        }
+
+        .tool-button.active {
+            background: var(--primary-color);
+            color: white;
+            border-color: var(--primary-color);
         }
 
         /* Canvas Area */
         .canvas-container {
-            flex-grow: 1;
             position: relative;
+            width: 100%;
+            height: 300px;
+            background: var(--surface-light);
+            border-radius: 10px;
             overflow: hidden;
-            background: var(--canvas-bg-light);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            transition: background 0.5s ease;
+            margin: 10px 0;
         }
 
         #canvas {
             position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             cursor: crosshair;
-            touch-action: none;
-            background: transparent; /* Canvas background handled by container */
-            box-shadow: 0 0 20px rgba(0,0,0,0.1);
-            border-radius: 8px;
         }
 
         /* On-Canvas Text Input */
@@ -329,55 +314,45 @@
 
         /* Responsive Adjustments */
         @media (max-width: 1024px) {
-            .sidebar.left,
-            .sidebar.right {
+            .tools-panel {
                 width: 200px;
                 padding: 15px;
             }
-            .header {
+            .chat-header {
                 gap: 10px;
             }
-            .header-title {
+            .chat-header-title {
                 font-size: 1.5em;
             }
         }
 
         @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                align-items: stretch;
-                padding: 10px;
-                gap: 10px;
-            }
-            .main-content {
+            .chat-container {
                 flex-direction: column;
             }
-            .sidebar.left,
-            .sidebar.right {
+            .tools-panel {
                 width: 100%;
-                height: auto; /* Allow height to adjust */
-                border-right: none;
                 border-left: none;
-                border-bottom: 1px solid var(--border-color-light);
-                box-shadow: none;
+                border-top: 1px solid var(--border-color-light);
             }
-            .control-group {
-                flex-wrap: wrap;
-                justify-content: center;
-                gap: 8px;
+            .message {
+                max-width: 90%;
             }
-            input[type="text"], input[type="number"], button, select {
+            .room-info {
+                display: none;
+            }
+            .chat-input-area {
+                padding: 10px;
+            }
+            .chat-input {
                 width: 100%;
             }
-            input[type="range"] {
+            .send-button {
+                position: static;
+                transform: none;
                 width: 100%;
-            }
-            .status {
-                margin-top: 5px;
-                min-width: unset;
-            }
-            .tool-grid {
-                grid-template-columns: repeat(3, 1fr); /* More columns for small screens */
+                border-radius: 0;
+                padding: 12px 20px;
             }
         }
 
@@ -387,50 +362,40 @@
                 background: linear-gradient(135deg, var(--background-dark) 0%, #2a3b4c 100%);
                 color: var(--text-color-dark);
             }
-            .header {
+            .chat-header,
+            .chat-input-area,
+            .tools-panel {
                 background: var(--surface-dark);
-                box-shadow: var(--shadow-dark);
+                border-color: var(--border-color-dark);
             }
-            .header-title {
-                color: var(--primary-color);
-            }
-            .control-group label {
+            .message.user {
+                background: var(--message-bg-user-dark);
                 color: var(--text-color-dark);
             }
-            input[type="text"], input[type="number"], input[type="color"], select, textarea {
-                background: #3f516d; /* Darker input background */
+            .message.ai {
+                background: var(--message-bg-ai-dark);
+                color: var(--text-color-dark);
+            }
+            .message.system {
+                background: var(--surface-dark);
+                border-color: var(--border-color-dark);
+                color: var(--text-color-dark);
+            }
+            .chat-input {
+                background: var(--surface-dark);
                 color: var(--text-color-dark);
                 border-color: var(--border-color-dark);
             }
-            input[type="range"]::-webkit-slider-thumb {
-                border-color: var(--surface-dark);
-            }
-            button.active {
-                background: var(--secondary-color);
-                box-shadow: inset 0 2px 5px rgba(0,0,0,0.5);
-            }
-            .status {
-                background: #3f516d;
+            .tool-button {
+                background: var(--surface-dark);
                 color: var(--text-color-dark);
+                border-color: var(--border-color-dark);
             }
             .canvas-container {
                 background: var(--canvas-bg-dark);
             }
             #canvas {
                 box-shadow: 0 0 20px rgba(0,0,0,0.3);
-            }
-            .sidebar.left,
-            .sidebar.right {
-                background: var(--surface-dark);
-                box-shadow: var(--shadow-dark);
-                border-color: var(--border-color-dark);
-            }
-            .sidebar-section h3 {
-                border-color: var(--border-color-dark);
-            }
-            .user-list li,
-            .chat-messages li {
-                border-color: var(--border-color-dark);
             }
             .glass-panel {
                 background: var(--glass-bg-dark);
@@ -441,94 +406,78 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-title">Super Sketchpad</div>
-        
-        <div class="control-group">
+    <div class="chat-header">
+        <div class="chat-header-title">AI Sketchpad Chat</div>
+        <div class="room-info">
             <input type="text" id="username" placeholder="Your name" value="Guest">
             <input type="text" id="roomId" placeholder="Room ID" value="sketch_room">
             <button onclick="joinRoom()" id="joinRoomBtn">Join Room</button>
         </div>
+    </div>
 
-        <div class="control-group">
-            <div class="status" id="status">Not connected</div>
+    <div class="chat-container">
+        <div class="chat-messages" id="chatMessages">
+            <div class="message system">
+                Welcome to AI Sketchpad Chat! Join a room to start collaborating.
+            </div>
+        </div>
+
+        <div class="tools-panel">
+            <div class="tools-section">
+                <h3>Drawing Tools</h3>
+                <div class="tool-grid">
+                    <button class="tool-button" onclick="toggleTool('pen')" id="penBtn">
+                        ✏️ Pen
+                    </button>
+                    <button class="tool-button" onclick="toggleTool('eraser')" id="eraserBtn">
+                        🧹 Eraser
+                    </button>
+                    <button class="tool-button" onclick="toggleTool('line')" id="lineBtn">
+                        📏 Line
+                    </button>
+                    <button class="tool-button" onclick="toggleTool('rectangle')" id="rectangleBtn">
+                        ⬜ Rectangle
+                    </button>
+                    <button class="tool-button" onclick="toggleTool('circle')" id="circleBtn">
+                        ⭕ Circle
+                    </button>
+                    <button class="tool-button" onclick="toggleTool('text')" id="textBtn">
+                        📝 Text
+                    </button>
+                </div>
+            </div>
+
+            <div class="tools-section">
+                <h3>Properties</h3>
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
+                    <label>Color:</label>
+                    <input type="color" id="colorPicker" value="#000000">
+                </div>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <label>Size:</label>
+                    <input type="range" id="lineWidthSlider" min="1" max="50" value="2" style="flex: 1;">
+                </div>
+            </div>
+
+            <div class="tools-section">
+                <h3>History</h3>
+                <div style="display: flex; gap: 10px;">
+                    <button class="tool-button" onclick="undo()">↩️ Undo</button>
+                    <button class="tool-button" onclick="redo()">↪️ Redo</button>
+                </div>
+            </div>
+
+            <div class="canvas-container">
+                <canvas id="canvas"></canvas>
+                <textarea id="textInput" style="display: none;"></textarea>
+            </div>
         </div>
     </div>
 
-    <div class="main-content">
-        <div class="sidebar left">
-            <div class="sidebar-section tools-section">
-                <h3>Tools</h3>
-                <div class="tool-grid">
-                    <button onclick="toggleTool('pen')" id="penBtn" class="active" title="Pen Tool">Pen</button>
-                    <button onclick="toggleTool('eraser')" id="eraserBtn" title="Eraser Tool">Eraser</button>
-                    <button onclick="toggleTool('line')" id="lineBtn" title="Line Tool">Line</button>
-                    <button onclick="toggleTool('rectangle')" id="rectangleBtn" title="Rectangle Tool">Rect</button>
-                    <button onclick="toggleTool('circle')" id="circleBtn" title="Circle Tool">Circle</button>
-                    <button onclick="toggleTool('text')" id="textBtn" title="Text Tool">Text</button>
-                </div>
-            </div>
-
-            <div class="sidebar-section properties-section">
-                <h3>Properties</h3>
-                <div class="control-group">
-                    <label for="colorPicker">Color:</label>
-                    <input type="color" id="colorPicker" value="#000000" title="Select Color">
-                </div>
-                <div class="control-group">
-                    <label for="lineWidthSlider">Size:</label>
-                    <input type="range" id="lineWidthSlider" min="1" max="50" value="2" title="Adjust Brush/Eraser Size">
-                </div>
-            </div>
-            
-            <div class="sidebar-section history-section">
-                <h3>History</h3>
-                <div class="control-group">
-                    <button onclick="undo()" title="Undo Last Action">Undo</button>
-                    <button onclick="redo()" title="Redo Last Action">Redo</button>
-                </div>
-            </div>
-
-            <!-- Optional Layers Panel (UI Only for now) -->
-            <div class="sidebar-section layers-section">
-                <h3>Layers (UI)</h3>
-                <ul id="layersList">
-                    <li>Layer 1 (Active)</li>
-                    <li>Layer 2</li>
-                </ul>
-                <div class="control-group">
-                    <button>+ Add Layer</button>
-                    <button>- Del Layer</button>
-                </div>
-            </div>
-
-        </div>
-
-        <div class="canvas-container">
-            <canvas id="canvas"></canvas>
-            <textarea id="textInput" style="display: none;"></textarea>
-        </div>
-
-        <div class="sidebar right">
-            <div class="sidebar-section user-section">
-                <h3>Users</h3>
-                <ul id="usersList">
-                    <li><span style="color: var(--primary-color);">•</span> Guest (You)</li>
-                </ul>
-            </div>
-
-            <div class="sidebar-section chat-section">
-                <h3>Chat</h3>
-                <div class="chat-messages" id="chatMessages">
-                    <ul>
-                        <li>Welcome to the Sketchpad!</li>
-                    </ul>
-                </div>
-                <div class="chat-input-group">
-                    <input type="text" id="chatInput" placeholder="Type a message...">
-                    <button onclick="sendMessage()">Send</button>
-                </div>
-            </div>
+    <div class="chat-input-area">
+        <div class="chat-input-wrapper">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Type your message...">
+            <button class="send-button" onclick="sendMessage()">➤</button>
         </div>
     </div>
 
@@ -998,22 +947,12 @@
         });
 
         socket.on('userJoined', ({ users }) => {
-            // Update user list UI
-            usersList.innerHTML = ''; // Clear existing list
-            users.forEach(user => {
-                const li = document.createElement('li');
-                li.textContent = user.username + (user.id === socket.id ? ' (You)' : '');
-                usersList.appendChild(li);
-            });
-            sendStatusMessage(`${users.length} user(s) in room`, 'info');
-            redrawCanvas(); // Request a full redraw to get consistent state
+            displayMessage('System', `${users.length} user(s) in room`, 'system');
+            redrawCanvas();
         });
 
         socket.on('chatMessage', ({ username, message }) => {
-            const li = document.createElement('li');
-            li.innerHTML = `<strong>${username}:</strong> ${message}`;
-            chatMessages.querySelector('ul').appendChild(li);
-            chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll to bottom
+            displayMessage(username, message, username === document.getElementById('username').value ? 'user' : 'ai');
         });
 
         // --- Room Management ---
@@ -1026,8 +965,7 @@
                 sendStatusMessage(`Joined room: ${roomId} as ${username}`, 'success');
                 drawingHistory = []; 
                 historyIndex = -1;
-                redrawCanvas(); // Clear local canvas effectively for new room
-                chatMessages.querySelector('ul').innerHTML = '<li>Welcome to the Sketchpad!</li>'; // Clear chat
+                redrawCanvas();
             } else {
                 sendStatusMessage('Please enter a username and room ID.', 'warning');
             }
@@ -1038,17 +976,11 @@
             const message = chatInput.value.trim();
             if (message && currentRoom) {
                 socket.emit('sendMessage', { roomId: currentRoom, message });
-                chatInput.value = ''; // Clear input
+                chatInput.value = '';
             } else if (!currentRoom) {
                 sendStatusMessage('Please join a room to chat.', 'warning');
             }
         }
-
-        chatInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                sendMessage();
-            }
-        });
 
         // --- Utility Functions ---
         function sendStatusMessage(message, type = 'info') {
@@ -1065,6 +997,26 @@
         // window.addEventListener('resize', resizeCanvas); // Already added inside resizeCanvas itself
         toggleTool(currentTool); 
         setCanvasStyles(); 
+
+        // Modified message display function
+        function displayMessage(username, message, type = 'user') {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${type}`;
+            
+            const header = document.createElement('div');
+            header.className = 'message-header';
+            header.textContent = username;
+            
+            const content = document.createElement('div');
+            content.className = 'message-content';
+            content.textContent = message;
+            
+            messageDiv.appendChild(header);
+            messageDiv.appendChild(content);
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
     </script>
 </body>
 </html> 
