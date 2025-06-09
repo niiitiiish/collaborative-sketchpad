@@ -2,23 +2,28 @@ services:
   - type: web
     name: collaborative-sketchpad
     env: node
-    rootDir: .
     buildCommand: |
-      echo "Installing root dependencies..."
       npm install
-      echo "Installing client dependencies..."
-      cd client
-      npm install
-      echo "Building client..."
-      export GENERATE_SOURCEMAP=false
-      npm run build
-      echo "Build complete"
-      cd ..
-    startCommand: node server.js
+      cd client && npm install
+      cd .. && npm run build
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
       - key: PORT
         value: 10000
       - key: GENERATE_SOURCEMAP
-        value: false 
+        value: false
+      - key: CORS_ORIGIN
+        value: "*"
+      - key: SOCKET_PING_TIMEOUT
+        value: "60000"
+      - key: SOCKET_PING_INTERVAL
+        value: "25000"
+    healthCheckPath: /
+    autoDeploy: true
+    plan: free
+    disk:
+      name: tmp
+      mountPath: /tmp
+      sizeGB: 1 

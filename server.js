@@ -12,9 +12,13 @@ const server = http.createServer(app);
 // Configure CORS for production
 const io = socketIo(server, {
   cors: {
-    origin: "*", // Allow all origins in production
-    methods: ["GET", "POST"]
-  }
+    origin: process.env.NODE_ENV === 'production' ? false : "*", // Allow all origins in development
+    methods: ["GET", "POST"],
+    credentials: true
+  },
+  transports: ['websocket', 'polling'],
+  pingTimeout: 60000,
+  pingInterval: 25000
 });
 
 app.use(cors());
@@ -56,6 +60,8 @@ const rooms = new Map();
 
 io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
+  console.log('Client IP:', socket.handshake.address);
+  console.log('Client headers:', socket.handshake.headers);
 
   socket.on('joinRoom', ({ roomId, username }) => {
     console.log(`User ${username} (${socket.id}) joining room ${roomId}`);

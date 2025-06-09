@@ -5,11 +5,31 @@ import SketchPad from './components/SketchPad';
 
 // Connect to the appropriate server URL based on environment
 const SOCKET_URL = process.env.NODE_ENV === 'production'
-  ? window.location.origin  // Automatically use the current domain
-  : `http://${window.location.hostname}:5000`;  // Use the same hostname as the client
+  ? window.location.origin  // In production, use the same origin
+  : `http://${window.location.hostname}:5000`;  // In development, use the local server
 
+console.log('Environment:', process.env.NODE_ENV);
 console.log('Connecting to socket server at:', SOCKET_URL);
-const socket = io(SOCKET_URL);
+
+const socket = io(SOCKET_URL, {
+  transports: ['websocket', 'polling'],
+  reconnection: true,
+  reconnectionAttempts: 5,
+  reconnectionDelay: 1000
+});
+
+// Add connection status logging
+socket.on('connect', () => {
+  console.log('Connected to server with ID:', socket.id);
+});
+
+socket.on('connect_error', (error) => {
+  console.error('Connection error:', error);
+});
+
+socket.on('disconnect', (reason) => {
+  console.log('Disconnected from server:', reason);
+});
 
 function App() {
   const [username, setUsername] = useState('');
