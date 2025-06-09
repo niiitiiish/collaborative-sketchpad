@@ -52,29 +52,11 @@ if (fs.existsSync(buildPath)) {
   });
 } else {
   console.error('Build directory not found at:', buildPath);
-  // List contents of parent directory
-  const parentDir = path.dirname(buildPath);
-  console.log('Contents of parent directory:', fs.readdirSync(parentDir));
-  
-  // Try to find the build directory
-  const possiblePaths = [
-    path.join(__dirname, 'build'),
-    path.join(__dirname, 'client/build'),
-    path.join(__dirname, '../client/build'),
-    path.join(__dirname, '../../client/build'),
-    path.join(__dirname, 'dist'),
-    path.join(__dirname, 'client/dist')
-  ];
-  
-  console.log('Searching for build directory in possible locations:');
-  possiblePaths.forEach(p => {
-    if (fs.existsSync(p)) {
-      console.log(`Found build directory at: ${p}`);
-      console.log('Contents:', fs.readdirSync(p));
-    } else {
-      console.log(`Not found: ${p}`);
-    }
-  });
+  console.log('Current directory structure:');
+  console.log('Root:', fs.readdirSync(__dirname));
+  if (fs.existsSync(path.join(__dirname, 'client'))) {
+    console.log('Client directory:', fs.readdirSync(path.join(__dirname, 'client')));
+  }
   
   // In development, redirect to the React dev server
   app.get('*', (req, res) => {
