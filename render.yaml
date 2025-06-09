@@ -6,11 +6,15 @@ services:
       echo "Installing root dependencies..."
       npm install
       echo "Installing client dependencies..."
-      cd client && npm install
+      cd client
+      npm install
       echo "Building client..."
       npm run build
-      echo "Build complete"
+      echo "Moving build to correct location..."
+      mkdir -p ../client/build
+      cp -r build/* ../client/build/
       cd ..
+      echo "Build complete"
     startCommand: npm start
     envVars:
       - key: NODE_ENV
