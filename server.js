@@ -18,7 +18,7 @@ const io = socketIo(server, {
 app.use(cors());
 
 // Serve static files from the React app
-const clientBuildPath = path.join(__dirname, 'client-build');
+const clientBuildPath = path.join(__dirname, 'client', 'build');
 console.log('Client build path:', clientBuildPath);
 
 // Check if build directory exists
