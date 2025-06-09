@@ -12,13 +12,11 @@ const server = http.createServer(app);
 // Configure CORS for production
 const io = socketIo(server, {
   cors: {
-    origin: process.env.NODE_ENV === 'production' ? false : "*", // Allow all origins in development
+    origin: process.env.NODE_ENV === 'production' ? false : "*",
     methods: ["GET", "POST"],
     credentials: true
   },
   transports: ['websocket', 'polling'],
-  pingTimeout: 60000,
-  pingInterval: 25000,
   path: '/socket.io/'
 });
 
@@ -29,7 +27,6 @@ app.use(express.json());
 const buildPath = path.join(__dirname, 'client/build');
 console.log('Build path:', buildPath);
 console.log('Environment:', process.env.NODE_ENV);
-console.log('Server URL:', process.env.NODE_ENV === 'production' ? 'Production' : 'Development');
 
 // Check if build directory exists
 if (fs.existsSync(buildPath)) {
@@ -175,12 +172,13 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 5000;
-const HOST = '0.0.0.0';  // Listen on all network interfaces
+const HOST = '0.0.0.0';
 
 server.listen(PORT, HOST, () => {
   console.log(`Server running at http://${HOST}:${PORT}`);
-  console.log(`Local access: http://localhost:${PORT}`);
-  console.log(`Network access: http://${getLocalIP()}:${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV}`);
+  console.log(`Build path: ${buildPath}`);
+  console.log(`Build exists: ${fs.existsSync(buildPath)}`);
 });
 
 // Function to get local IP address

@@ -18,7 +18,8 @@ const socket = io(SOCKET_URL, {
   reconnectionAttempts: 5,
   reconnectionDelay: 1000,
   path: '/socket.io/',
-  secure: process.env.NODE_ENV === 'production'
+  secure: process.env.NODE_ENV === 'production',
+  rejectUnauthorized: false
 });
 
 // Add connection status logging
@@ -28,6 +29,11 @@ socket.on('connect', () => {
 
 socket.on('connect_error', (error) => {
   console.error('Connection error:', error);
+  console.error('Connection details:', {
+    url: SOCKET_URL,
+    environment: process.env.NODE_ENV,
+    origin: window.location.origin
+  });
 });
 
 socket.on('disconnect', (reason) => {

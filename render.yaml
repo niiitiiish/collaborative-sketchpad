@@ -16,10 +16,8 @@ services:
         value: false
       - key: CORS_ORIGIN
         value: "*"
-      - key: SOCKET_PING_TIMEOUT
-        value: "60000"
-      - key: SOCKET_PING_INTERVAL
-        value: "25000"
+      - key: HOST
+        value: "0.0.0.0"
     healthCheckPath: /
     autoDeploy: true
     plan: free
