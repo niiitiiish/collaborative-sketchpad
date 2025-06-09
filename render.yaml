@@ -3,9 +3,14 @@ services:
     name: collaborative-sketchpad
     env: node
     buildCommand: |
+      echo "Installing root dependencies..."
       npm install
+      echo "Installing client dependencies..."
       cd client && npm install
-      cd .. && npm run build
+      echo "Building client..."
+      npm run build
+      echo "Build complete"
+      cd ..
     startCommand: npm start
     envVars:
       - key: NODE_ENV

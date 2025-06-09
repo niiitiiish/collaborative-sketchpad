@@ -27,6 +27,7 @@ app.use(express.json());
 const buildPath = path.join(__dirname, 'client/build');
 console.log('Build path:', buildPath);
 console.log('Environment:', process.env.NODE_ENV);
+console.log('Current directory:', __dirname);
 
 // Check if build directory exists
 if (fs.existsSync(buildPath)) {
@@ -49,6 +50,10 @@ if (fs.existsSync(buildPath)) {
   });
 } else {
   console.error('Build directory not found at:', buildPath);
+  // List contents of parent directory
+  const parentDir = path.dirname(buildPath);
+  console.log('Contents of parent directory:', fs.readdirSync(parentDir));
+  
   // In development, redirect to the React dev server
   app.get('*', (req, res) => {
     res.redirect('http://localhost:3000');
