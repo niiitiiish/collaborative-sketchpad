@@ -28,6 +28,7 @@ const buildPath = path.join(__dirname, 'client/build');
 console.log('Build path:', buildPath);
 console.log('Environment:', process.env.NODE_ENV);
 console.log('Current directory:', __dirname);
+console.log('Directory contents:', fs.readdirSync(__dirname));
 
 // Check if build directory exists
 if (fs.existsSync(buildPath)) {
@@ -48,16 +49,50 @@ if (fs.existsSync(buildPath)) {
   });
 } else {
   console.error('Build directory not found at:', buildPath);
-  // In production, serve a 404 page
-  if (process.env.NODE_ENV === 'production') {
-    app.get('*', (req, res) => {
-      res.status(404).send('Application not built correctly. Please check the build process.');
-    });
+  console.log('Current directory structure:');
+  console.log('Root:', fs.readdirSync(__dirname));
+  
+  // Check client directory
+  const clientPath = path.join(__dirname, 'client');
+  if (fs.existsSync(clientPath)) {
+    console.log('Client directory:', fs.readdirSync(clientPath));
+    
+    // Check if build exists in client directory
+    const clientBuildPath = path.join(clientPath, 'build');
+    if (fs.existsSync(clientBuildPath)) {
+      console.log('Found build in client directory');
+      // Serve static files from the client build directory
+      app.use(express.static(clientBuildPath));
+      app.get('*', (req, res) => {
+        res.sendFile(path.join(clientBuildPath, 'index.html'));
+      });
+    } else {
+      console.log('No build directory found in client');
+      // In production, serve a 404 page
+      if (process.env.NODE_ENV === 'production') {
+        app.get('*', (req, res) => {
+          res.status(404).send('Application not built correctly. Please check the build process.');
+        });
+      } else {
+        // In development, redirect to the React dev server
+        app.get('*', (req, res) => {
+          res.redirect('http://localhost:3000');
+        });
+      }
+    }
   } else {
-    // In development, redirect to the React dev server
-    app.get('*', (req, res) => {
-      res.redirect('http://localhost:3000');
-    });
+    console.log('No client directory found');
+    // In production, serve a 404 page
+    if (process.env.NODE_ENV === 'production') {
+      app.get('*', (req, res) => {
+        res.status(404).send('Application not built correctly. Please check the build process.');
+      });
+    } else {
+      // In development, redirect to the React dev server
+      app.get('*', (req, res) => {
+        res.redirect('http://localhost:3000');
+      });
+    }
   }
 }
 

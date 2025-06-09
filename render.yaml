@@ -4,19 +4,43 @@ services:
     env: node
     buildCommand: |
       echo "Starting build process..."
+      pwd
+      ls -la
+      
+      echo "Installing root dependencies..."
       npm install
+      
+      echo "Building client..."
       cd client
       npm install
-      echo "Building client..."
+      echo "Running build command..."
       npm run build
+      
       echo "Verifying build..."
-      ls -la build/
-      cd ..
+      if [ -d "build" ]; then
+        echo "Build directory exists"
+        ls -la build/
+      else
+        echo "Error: Build directory not created!"
+        exit 1
+      fi
+      
       echo "Moving build to correct location..."
+      cd ..
+      rm -rf client/build
       mkdir -p client/build
       cp -r client/build/* client/build/
-      echo "Verifying final build..."
-      ls -la client/build/
+      
+      echo "Final verification..."
+      if [ -d "client/build" ]; then
+        echo "Final build directory exists"
+        ls -la client/build/
+      else
+        echo "Error: Final build directory not created!"
+        exit 1
+      fi
+      
+      echo "Build complete"
     startCommand: NODE_ENV=production node server.js
     envVars:
       - key: NODE_ENV
