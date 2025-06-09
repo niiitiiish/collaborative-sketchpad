@@ -10,7 +10,8 @@ services:
       cd client
       npm install
       echo "Building client..."
-      CI=false npm run build
+      export GENERATE_SOURCEMAP=false
+      npm run build
       echo "Build complete"
       cd ..
     startCommand: node server.js
@@ -19,5 +20,5 @@ services:
         value: production
       - key: PORT
         value: 10000
-      - key: CI
+      - key: GENERATE_SOURCEMAP
         value: false 
