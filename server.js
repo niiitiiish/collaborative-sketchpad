@@ -54,14 +54,35 @@ if (fs.existsSync(buildPath)) {
   console.error('Build directory not found at:', buildPath);
   console.log('Current directory structure:');
   console.log('Root:', fs.readdirSync(__dirname));
-  if (fs.existsSync(path.join(__dirname, 'client'))) {
-    console.log('Client directory:', fs.readdirSync(path.join(__dirname, 'client')));
-  }
   
-  // In development, redirect to the React dev server
-  app.get('*', (req, res) => {
-    res.redirect('http://localhost:3000');
-  });
+  // Check client directory
+  const clientPath = path.join(__dirname, 'client');
+  if (fs.existsSync(clientPath)) {
+    console.log('Client directory:', fs.readdirSync(clientPath));
+    
+    // Check if build exists in client directory
+    const clientBuildPath = path.join(clientPath, 'build');
+    if (fs.existsSync(clientBuildPath)) {
+      console.log('Found build in client directory');
+      // Serve static files from the client build directory
+      app.use(express.static(clientBuildPath));
+      app.get('*', (req, res) => {
+        res.sendFile(path.join(clientBuildPath, 'index.html'));
+      });
+    } else {
+      console.log('No build directory found in client');
+      // In development, redirect to the React dev server
+      app.get('*', (req, res) => {
+        res.redirect('http://localhost:3000');
+      });
+    }
+  } else {
+    console.log('No client directory found');
+    // In development, redirect to the React dev server
+    app.get('*', (req, res) => {
+      res.redirect('http://localhost:3000');
+    });
+  }
 }
 
 // Store active rooms and their permissions

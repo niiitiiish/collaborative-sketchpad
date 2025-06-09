@@ -18,6 +18,14 @@ services:
       echo "Verifying build..."
       ls -la build/
       
+      echo "Moving build to correct location..."
+      cd ..
+      mkdir -p client/build
+      cp -r client/build/* client/build/
+      
+      echo "Final verification..."
+      ls -la client/build/
+      
       echo "Build complete"
     startCommand: npm start
     envVars:
